@@ -18,15 +18,5 @@ group("apps") {
     ":portable_apps",
     "//apps/benchmark",
     "//apps/benchmark:apptests",
-    "//apps/moterm",
-    "//apps/moterm:apptests",
   ]
-
-  if (is_android) {
-    deps += [ "//apps/shortcut" ]
-  }
-
-  if (mojo_use_nacl) {
-    deps += [ ":portable_apps(//build/toolchain/nacl:newlib_pnacl)" ]
-  }
 }

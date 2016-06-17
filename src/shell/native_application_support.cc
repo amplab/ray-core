@@ -7,24 +7,6 @@
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/logging.h"
-#include "mojo/public/platform/native/gles2_impl_chromium_bind_uniform_location_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_chromium_map_sub_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_chromium_miscellaneous_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_chromium_resize_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_chromium_sync_point_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_chromium_texture_mailbox_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_ext_debug_marker_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_ext_discard_framebuffer_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_ext_multisampled_render_to_texture_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_ext_occlusion_query_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_ext_texture_storage_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_khr_blend_equation_advanced_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_oes_vertex_array_object_thunks.h"
-#include "mojo/public/platform/native/gles2_impl_thunks.h"
-#include "mojo/public/platform/native/mgl_echo_thunks.h"
-#include "mojo/public/platform/native/mgl_onscreen_thunks.h"
-#include "mojo/public/platform/native/mgl_signal_sync_point_thunks.h"
-#include "mojo/public/platform/native/mgl_thunks.h"
 #include "mojo/public/platform/native/platform_handle_private_thunks.h"
 #include "mojo/public/platform/native/system_thunks.h"
 
@@ -78,53 +60,6 @@ bool RunNativeApplication(
   // TODO(freiling): enforce the private nature of this API, somehow?
   SetThunks(&MojoMakePlatformHandlePrivateThunks,
             "MojoSetPlatformHandlePrivateThunks", app_library);
-
-  SetThunks(&MojoMakeGLES2ImplThunks, "MojoSetGLES2ImplThunks",
-            app_library);
-  SetThunks(MojoMakeGLES2ImplEXTDebugMarkerThunks,
-            "MojoSetGLES2ImplEXTDebugMarkerThunks", app_library);
-  SetThunks(MojoMakeGLES2ImplEXTDiscardFramebufferThunks,
-            "MojoSetGLES2ImplEXTDiscardFramebufferThunks", app_library);
-  SetThunks(MojoMakeGLES2ImplEXTOcclusionQueryThunks,
-            "MojoSetGLES2ImplEXTOcclusionQueryThunks", app_library);
-  SetThunks(MojoMakeGLES2ImplEXTTextureStorageThunks,
-            "MojoSetGLES2ImplEXTTextureStorageThunks", app_library);
-  SetThunks(MojoMakeGLES2ImplEXTMultisampledRenderToTextureThunks,
-            "MojoSetGLES2ImplEXTMultisampledRenderToTextureThunks",
-            app_library);
-  SetThunks(MojoMakeGLES2ImplKHRBlendEquationAdvancedThunks,
-            "MojoSetGLES2ImplKHRBlendEquationAdvancedThunks", app_library);
-  SetThunks(MojoMakeGLES2ImplOESVertexArrayObjectThunks,
-            "MojoSetGLES2ImplOESVertexArrayObjectThunks", app_library);
-  // Deprecated name for "MojoSetGLES2ImplEXTOcclusionQueryThunks" (TODO(vtl):
-  // when no app is using this name any longer, delete it):
-  SetThunks(MojoMakeGLES2ImplEXTOcclusionQueryThunks,
-            "MojoSetGLES2ImplOcclusionQueryEXTThunks", app_library);
-  // "Chromium" extensions:
-  SetThunks(MojoMakeGLES2ImplCHROMIUMBindUniformLocationThunks,
-            "MojoSetGLES2ImplCHROMIUMBindUniformLocationThunks", app_library);
-  SetThunks(MojoMakeGLES2ImplCHROMIUMMapSubThunks,
-            "MojoSetGLES2ImplCHROMIUMMapSubThunks", app_library);
-  SetThunks(MojoMakeGLES2ImplCHROMIUMMiscellaneousThunks,
-            "MojoSetGLES2ImplCHROMIUMMiscellaneousThunks", app_library);
-  SetThunks(MojoMakeGLES2ImplCHROMIUMResizeThunks,
-            "MojoSetGLES2ImplCHROMIUMResizeThunks", app_library);
-  SetThunks(MojoMakeGLES2ImplCHROMIUMSyncPointThunks,
-            "MojoSetGLES2ImplCHROMIUMSyncPointThunks", app_library);
-  SetThunks(MojoMakeGLES2ImplCHROMIUMTextureMailboxThunks,
-            "MojoSetGLES2ImplCHROMIUMTextureMailboxThunks", app_library);
-
-  if (SetThunks(MojoMakeMGLThunks, "MojoSetMGLThunks", app_library)) {
-    SetThunks(MojoMakeMGLEchoThunks, "MojoSetMGLEchoThunks", app_library);
-
-    // TODO(jamesr): We should only need to expose the onscreen thunks to apps
-    // that need to draw to the screen like the system compositor.
-    SetThunks(MojoMakeMGLOnscreenThunks, "MojoSetMGLOnscreenThunks",
-              app_library);
-
-    SetThunks(MojoMakeMGLSignalSyncPointThunks,
-              "MojoSetMGLSignalSyncPointThunks", app_library);
-  }
 
   typedef MojoResult (*MojoMainFunction)(MojoHandle);
   MojoMainFunction main_function = reinterpret_cast<MojoMainFunction>(

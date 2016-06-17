@@ -10,24 +10,15 @@ group("services") {
     "//services/asset_bundle",
     "//services/authenticating_url_loader_interceptor",
     "//services/authentication",
-    "//services/clipboard",
-    "//services/dart",
     "//services/debugger",
     "//services/flog",
-    "//services/gles2:lib",
     "//services/http_server",
     "//services/icu_data",
     "//services/log",
     "//services/native_support",
-    "//services/prediction",
     "//services/test_service:bindings",
     "//services/tracing",
   ]
-
-  # TODO: fix ffmpeg build
-  if (!is_fnl) {
-    deps += [ "//services/media" ]
-  }
 
   if (is_android) {
     deps += [
@@ -39,7 +30,6 @@ group("services") {
       "//services/notifications",
       "//services/sensors",
       "//services/sharing:android_sharing",
-      "//services/speech_recognizer",
     ]
     if (defined(go_build_tool) && go_build_tool != "") {
       deps += [ "//services/vanadium/security:principal_service" ]
@@ -58,9 +48,6 @@ group("services") {
     deps += [
       "//services/device_info",
       "//services/files",
-      "//services/gfx",
-      "//services/native_viewport",
-      "//services/ui",
       "//services/url_response_disk_cache",
     ]
   }
@@ -81,19 +68,10 @@ group("tests") {
     "//services/asset_bundle:apptests",
     "//services/authenticating_url_loader_interceptor:apptests",
     "//services/clipboard:apptests",
-    "//services/gfx/compositor:apptests",
     "//services/http_server:apptests",
-    "//services/media/common:apptests",
     "//services/native_support:apptests",
-    "//services/prediction:apptests",
-    "//services/ui/view_manager:view_manager_apptests",
     "//services/util/cpp:apptests",
   ]
-
-  # TODO: fix ffmpeg build
-  if (!is_fnl) {
-    deps += [ "//services/media/framework:apptests" ]
-  }
 
   if (!is_android) {
     deps += [ "//services/authentication:apptests" ]
