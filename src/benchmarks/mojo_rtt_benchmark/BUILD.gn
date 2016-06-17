@@ -1,0 +1,30 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/dart/rules.gni")
+
+dart_pkg("mojo_rtt_benchmark") {
+  apps = [
+    [
+      "dart_rtt_benchmark",
+      "lib/main.dart",
+    ],
+    [
+      "dart_echo_server",
+      "lib/echo_server.dart",
+    ],
+    [
+      "dart_isolate_rtt_benchmark",
+      "lib/isolate.dart",
+    ],
+  ]
+  sources = [
+    "pubspec.yaml",
+  ]
+  deps = [
+    "//examples/echo:bindings",
+    "//mojo/dart/packages",
+    "//third_party/dart-pkg",
+  ]
+}

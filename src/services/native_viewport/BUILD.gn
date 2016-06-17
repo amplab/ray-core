@@ -1,0 +1,158 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/ui.gni")
+import("//mojo/public/mojo_application.gni")
+
+if (is_android) {
+  import("//build/config/android/config.gni")
+  import("//build/config/android/rules.gni")
+  import("//mojo/public/tools/bindings/mojom.gni")
+
+  group("native_viewport") {
+    deps = [
+      ":jni_headers",
+      ":lib",
+      ":native_viewport_java",
+    ]
+  }
+
+  android_library("native_viewport_java") {
+    java_files =
+        [ "android/src/org/chromium/mojo/PlatformViewportAndroid.java" ]
+
+    deps = [
+      "//base:base_java",
+      "//mojo/public/java:bindings",
+      "//mojo/public/java:system",
+      "//mojo/services/keyboard/interfaces:interfaces_java",
+      "//services/keyboard",
+    ]
+  }
+
+  generate_jni("jni_headers") {
+    sources = [
+      "android/src/org/chromium/mojo/PlatformViewportAndroid.java",
+    ]
+
+    jni_package = "mojo"
+  }
+
+  mojom("interfaces") {
+    sources = [
+      "native_viewport_support.mojom",
+    ]
+  }
+} else {
+  mojo_native_application("native_viewport") {
+    output_name = "native_viewport_service"
+    sources = [
+      "main.cc",
+    ]
+    deps = [
+      ":lib",
+      "//base",
+      "//gpu/config",
+      "//mojo/application",
+      "//mojo/common:tracing_impl",
+      "//mojo/public/cpp/bindings:bindings",
+      "//mojo/services/native_viewport/cpp:args",
+      "//mojo/services/native_viewport/interfaces",
+      "//services/gles2",
+      "//ui/events",
+      "//ui/events/platform",
+      "//ui/gl",
+    ]
+
+    if (use_ozone) {
+      sources += [
+        "ozone/native_viewport_app_ozone.cc",
+        "ozone/native_viewport_app_ozone.h",
+      ]
+      deps += [
+        "//mojo/services/ozone_drm_gpu/interfaces",
+        "//mojo/services/ozone_drm_host/interfaces",
+        "//ui/events/ozone:events_ozone_evdev",
+        "//ui/ozone",
+      ]
+    } else {
+      sources += [
+        "native_viewport_app.cc",
+        "native_viewport_app.h",
+      ]
+    }
+  }
+}
+
+source_set("lib") {
+  sources = [
+    "native_viewport_impl.cc",
+    "native_viewport_impl.h",
+    "onscreen_context_provider.cc",
+    "onscreen_context_provider.h",
+    "platform_viewport.h",
+    "platform_viewport_android.cc",
+    "platform_viewport_android.h",
+    "platform_viewport_headless.cc",
+    "platform_viewport_headless.h",
+    "platform_viewport_stub.cc",
+    "platform_viewport_x11.cc",
+  ]
+
+  if (!is_ios) {
+    sources -= [ "platform_viewport_stub.cc" ]
+  }
+
+  deps = [
+    "//base",
+    "//gpu/command_buffer/service",
+    "//mojo/application",
+    "//mojo/common",
+    "//mojo/converters/geometry",
+    "//mojo/converters/input_events",
+    "//mojo/converters/native_viewport",
+    "//mojo/environment:chromium",
+    "//mojo/services/geometry/interfaces",
+    "//mojo/services/native_viewport/interfaces",
+    "//services/gles2",
+    "//ui/display/types",
+    "//ui/events",
+    "//ui/events/platform",
+    "//ui/gfx",
+    "//ui/gfx/geometry",
+    "//ui/gl",
+    "//ui/platform_window",
+  ]
+
+  if (is_android) {
+    deps += [
+      ":interfaces",
+      ":jni_headers",
+    ]
+  }
+
+  if (use_x11) {
+    deps += [ "//ui/platform_window/x11" ]
+  } else {
+    sources -= [ "platform_viewport_x11.cc" ]
+  }
+
+  if (use_ozone) {
+    sources += [
+      "ozone/display_manager.cc",
+      "ozone/display_manager.h",
+      "ozone/platform_viewport_ozone.cc",
+    ]
+    deps += [
+      "//ui/events/ozone:events_ozone_evdev",
+      "//ui/ozone",
+      "//ui/ozone:ozone_base",
+      "//ui/ozone/platform/drm:drm_common",
+    ]
+  }
+
+  if (is_win) {
+    deps += [ "//ui/platform_window/win" ]
+  }
+}

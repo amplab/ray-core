@@ -1,0 +1,23 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("gl") {
+  sources = [
+    "context.cc",
+    "context.h",
+    "module.cc",
+    "module.h",
+  ]
+
+  deps = [
+    "//base",
+    "//gin",
+    "//mojo/environment:chromium",
+    "//mojo/public/c/gpu",
+    "//mojo/public/c/gpu:gpu_onscreen",
+    "//mojo/public/cpp/environment",
+    "//services/js/system",
+    "//v8",
+  ]
+}

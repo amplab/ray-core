@@ -1,0 +1,31 @@
+// Copyright 2014 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+module js;
+
+[ServiceName="js::PingPongService"]
+interface PingPongService {
+  SetClient(PingPongClient client);
+
+  // Typically calls PingPongClient::Pong(ping_value + 1)
+  Ping(uint16 ping_value);
+
+  // Ping the PingPongService at |url| |count| times and return true
+  // after the final Pong() is received.
+  PingTargetURL(string url, uint16 count) => (bool ok);
+
+  // Ping the PingPongService |count| times and return true
+  // after the final Pong() is received.
+  PingTargetService(PingPongService service, uint16 count) => (bool ok);
+
+  // Return a PingPongService
+  GetPingPongService(PingPongService& service);
+
+  // Make it stop.
+  Quit();
+};
+
+interface PingPongClient {
+  Pong(uint16 pong_value);
+};

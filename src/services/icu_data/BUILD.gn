@@ -1,0 +1,45 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+import("//mojo/tools/embed/rules.gni")
+
+embed_file("embed_icu_data") {
+  source = "$root_out_dir/icudtl.dat"
+  namespace = "icu_data"
+  variable = "kICUData"
+
+  deps = [
+    "//third_party/icu:icudata",
+  ]
+}
+
+mojo_native_application("icu_data") {
+  sources = [
+    "main.cc",
+  ]
+
+  deps = [
+    ":lib",
+    "//mojo/application",
+  ]
+}
+
+# Library that allows the service code to be included directly into the
+# embedding shell. Used by https://manganese.googlesource.com/.
+source_set("lib") {
+  sources = [
+    "icu_data_impl.cc",
+  ]
+
+  deps = [
+    ":embed_icu_data",
+    "//base",
+    "//mojo/application",
+    "//mojo/common",
+    "//mojo/environment:chromium",
+    "//mojo/services/icu_data/interfaces",
+  ]
+}

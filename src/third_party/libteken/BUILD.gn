@@ -1,0 +1,25 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/tools/embed/rules.gni")
+
+source_set("libteken") {
+  sources = [
+    "teken/teken.c",
+    "teken/teken.h",
+    "teken/teken_scs.h",
+    "teken/teken_state.h",
+    "teken/teken_subr.h",
+    "teken/teken_subr_compat.h",
+    "teken/teken_wcwidth.h",
+  ]
+
+  defines = [ "__unused=__attribute__((unused))" ]
+}
+
+embed_file("libteken_license_text") {
+  source = "COPYRIGHT"
+  namespace = "licenses"
+  variable = "kLibtekenLicenseText"
+}

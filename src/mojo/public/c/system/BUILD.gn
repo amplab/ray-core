@@ -1,0 +1,22 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("../../mojo_sdk.gni")
+
+# This target merely declares the Mojo system API's types, functions, etc. To
+# use the functions, you must also depend on a specific implementation (e.g.,
+# ../../platform/native:system).
+mojo_sdk_source_set("system") {
+  sources = [
+    "buffer.h",
+    "data_pipe.h",
+    "handle.h",
+    "macros.h",
+    "message_pipe.h",
+    "result.h",
+    "time.h",
+    "wait.h",
+    "wait_set.h",
+  ]
+}

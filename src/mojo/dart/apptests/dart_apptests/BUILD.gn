@@ -1,0 +1,30 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/dart/rules.gni")
+
+dart_pkg("dart_apptests") {
+  apps = [ [
+        "dart_apptests",
+        "lib/main.dart",
+      ] ]
+  sources = [
+    "lib/src/connect_to_loader_apptests.dart",
+    "lib/src/echo_apptests.dart",
+    "lib/src/file_apptests.dart",
+    "lib/src/filter_apptests.dart",
+    "lib/src/io_http_apptests.dart",
+    "lib/src/io_internet_address_apptests.dart",
+    "lib/src/pingpong_apptests.dart",
+    "lib/src/service_describer_apptests.dart",
+    "lib/src/uri_apptests.dart",
+    "lib/src/versioning_apptests.dart",
+    "pubspec.yaml",
+  ]
+  deps = [
+    "//mojo/dart/apptests/test_apps",
+    "//mojo/dart/packages",
+    "//third_party/dart-pkg",
+  ]
+}

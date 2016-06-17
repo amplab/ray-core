@@ -1,0 +1,18 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("clock") {
+  sources = [
+    "monotonic_clock.cc",
+    "monotonic_clock.h",
+  ]
+
+  deps = [
+    "//base",
+    "//gin",
+    "//mojo/public/cpp/system",
+    "//services/js/system",
+    "//v8",
+  ]
+}

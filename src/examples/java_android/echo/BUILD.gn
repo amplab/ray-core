@@ -1,0 +1,42 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+import("//mojo/android/rules.gni")
+
+group("echo") {
+  deps = [
+    ":java_echo_client",
+    ":java_echo_server",
+  ]
+}
+
+mojo_android_java_application("java_echo_client") {
+  sources = [
+    "src/org/chromium/examples/java_echo/EchoClientApp.java",
+  ]
+
+  mojo_main = "org.chromium.examples.java_echo.EchoClientApp"
+
+  deps = [
+    "//examples/echo:bindings_java",
+    "//mojo/public/interfaces/application:application_java",
+    "//mojo/public/java:application",
+  ]
+}
+
+mojo_android_java_application("java_echo_server") {
+  sources = [
+    "src/org/chromium/examples/java_echo/EchoServerApp.java",
+  ]
+
+  mojo_main = "org.chromium.examples.java_echo.EchoServerApp"
+
+  deps = [
+    "//examples/echo:bindings_java",
+    "//mojo/public/interfaces/application:application_java",
+    "//mojo/public/java:application",
+  ]
+}

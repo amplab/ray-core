@@ -1,0 +1,140 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/module_args/mojo.gni")
+import("//mojo/public/mojo_application.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+import("//mojo/tools/embed/rules.gni")
+import("//testing/test.gni")
+
+group("tests") {
+  testonly = true
+
+  deps = [
+    ":apptests",
+    ":unittests",
+  ]
+}
+
+source_set("url_response_disk_cache") {
+  sources = [
+    "url_response_disk_cache_app.cc",
+    "url_response_disk_cache_app.h",
+    "url_response_disk_cache_delegate.h",
+    "url_response_disk_cache_impl.cc",
+    "url_response_disk_cache_impl.h",
+  ]
+
+  deps = [
+    ":bindings",
+    ":url_response_disk_cache_db",
+    "//base",
+    "//crypto",
+    "//mojo/application",
+    "//mojo/data_pipe_utils",
+    "//mojo/environment:chromium",
+    "//mojo/public/cpp/application",
+    "//mojo/public/cpp/system",
+    "//mojo/public/interfaces/network",
+    "//mojo/services/url_response_disk_cache/interfaces",
+    "//third_party/zlib:zip",
+    "//url:url",
+  ]
+}
+
+source_set("url_response_disk_cache_db") {
+  sources = [
+    "url_response_disk_cache_db.cc",
+    "url_response_disk_cache_db.h",
+  ]
+
+  deps = [
+    ":bindings",
+    "//base",
+    "//third_party/leveldatabase",
+  ]
+}
+
+mojom("bindings") {
+  sources = [
+    "url_response_disk_cache_entry.mojom",
+  ]
+
+  deps = [
+    "//mojo/public/interfaces/network",
+  ]
+}
+
+mojo_native_application("apptests") {
+  output_name = "url_response_disk_cache_apptests"
+
+  testonly = true
+
+  sources = [
+    "url_response_disk_cache_apptest.cc",
+  ]
+
+  deps = [
+    ":embed_test_data",
+    "//base",
+    "//mojo/application",
+    "//mojo/application:test_support",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/cpp/system:system",
+    "//mojo/services/network/interfaces:interfaces",
+    "//mojo/services/url_response_disk_cache/interfaces",
+  ]
+
+  data_deps = [ ":url_response_disk_cache" ]
+}
+
+test("unittests") {
+  output_name = "url_response_disk_cache_unittests"
+
+  sources = [
+    "url_response_disk_cache_db_unittests.cc",
+  ]
+
+  deps = [
+    ":url_response_disk_cache_db",
+    "//base",
+    "//base/test:run_all_unittests",
+    "//base/test:test_support",
+    "//mojo/environment:chromium",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/cpp/system",
+    "//mojo/public/platform/native:system",
+    "//testing/gtest",
+  ]
+}
+
+action("test_data") {
+  script = "//mojo/public/tools/gn/zip.py"
+  inputs = [
+    "test_data/file1",
+    "test_data/file2",
+  ]
+  output = "$target_out_dir/test_data.zip"
+  outputs = [
+    output,
+  ]
+  rebase_base_dir = rebase_path("test_data", root_build_dir)
+  rebase_inputs = rebase_path(inputs, root_build_dir)
+  rebase_output = rebase_path(output, root_build_dir)
+  args = [
+    "--base-dir=$rebase_base_dir",
+    "--inputs=$rebase_inputs",
+    "--output=$rebase_output",
+  ]
+}
+
+embed_file("embed_test_data") {
+  source = "$target_out_dir/test_data.zip"
+  namespace = "mojo"
+  variable = "kTestData"
+
+  deps = [
+    ":test_data",
+  ]
+}

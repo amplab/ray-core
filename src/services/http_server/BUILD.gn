@@ -1,0 +1,70 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+
+mojo_native_application("http_server") {
+  sources = [
+    "connection.cc",
+    "connection.h",
+    "http_request_parser.cc",
+    "http_request_parser.h",
+    "http_server_app.cc",
+    "http_server_factory_impl.cc",
+    "http_server_factory_impl.h",
+    "http_server_impl.cc",
+    "http_server_impl.h",
+    "http_status_code_list.h",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/common",
+    "//mojo/data_pipe_utils",
+    "//mojo/public/cpp/application:standalone",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/cpp/environment",
+    "//mojo/public/cpp/system",
+    "//mojo/public/cpp/utility",
+    "//mojo/services/http_server/cpp",
+    "//mojo/services/http_server/interfaces",
+    "//mojo/services/network/interfaces",
+    "//third_party/re2",
+  ]
+
+  if (is_win) {
+    cflags = [
+      # size_t to int.
+      "/wd4267",
+    ]
+  }
+}
+
+mojo_native_application("apptests") {
+  output_name = "http_server_apptests"
+
+  testonly = true
+
+  sources = [
+    "http_server_apptest.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/application",
+    "//mojo/application:test_support",
+    "//mojo/data_pipe_utils",
+    "//mojo/public/cpp/bindings:callback",
+    "//mojo/public/cpp/environment",
+    "//mojo/public/cpp/system",
+    "//mojo/services/http_server/cpp",
+    "//mojo/services/http_server/interfaces",
+    "//mojo/services/http_server/interfaces:interfaces_sync",
+    "//mojo/services/network/interfaces",
+  ]
+
+  data_deps = [
+    ":http_server($default_toolchain)",
+  ]
+}

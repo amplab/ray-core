@@ -1,0 +1,42 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//testing/test.gni")
+
+source_set("crash") {
+  sources = [
+    "breakpad.cc",
+    "breakpad.h",
+    "crash_upload.cc",
+    "crash_upload.h",
+  ]
+
+  if (is_android) {
+    libs = [ "log" ]
+  }
+
+  deps = [
+    "//base",
+    "//mojo/data_pipe_utils",
+    "//mojo/services/network/interfaces",
+    "//third_party/breakpad:client",
+  ]
+}
+
+test("crash_unittests") {
+  sources = [
+    "crash_upload_unittests.cc",
+  ]
+
+  deps = [
+    ":crash",
+    "//base",
+    "//mojo/data_pipe_utils",
+    "//mojo/edk/test:run_all_unittests",
+    "//mojo/environment:chromium",
+    "//mojo/message_pump",
+    "//mojo/services/network/interfaces",
+    "//testing/gtest",
+  ]
+}

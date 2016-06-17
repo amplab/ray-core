@@ -1,0 +1,5 @@
+name: dart_echo_client
+dependencies:
+  mojo: ^0.4.0
+  mojom:
+    path: ../../../out/Debug/gen/dart-pkg/mojom

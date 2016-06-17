@@ -1,0 +1,85 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+import("//testing/test.gni")
+
+group("js") {
+  deps = [
+    ":js_content_handler",
+  ]
+}
+
+group("tests") {
+  testonly = true
+
+  deps = [
+    ":js_apptests",
+    ":js_services_unittests",
+    "//services/js/system:tests",
+  ]
+}
+
+mojo_native_application("js_content_handler") {
+  sources = [
+    "content_handler_main.cc",
+    "js_app.cc",
+    "js_app.h",
+    "js_app_message_loop_observers.cc",
+    "js_app_message_loop_observers.h",
+    "js_app_runner_delegate.cc",
+    "js_app_runner_delegate.h",
+  ]
+
+  deps = [
+    "//base:i18n",
+    "//mojo/application",
+    "//mojo/application:content_handler",
+    "//mojo/data_pipe_utils",
+    "//mojo/environment:chromium",
+    "//mojo/message_pump",
+    "//mojo/public/cpp/system",
+    "//mojo/public/cpp/utility",
+    "//mojo/public/interfaces/application",
+    "//mojo/services/content_handler/interfaces",
+    "//mojo/services/network/interfaces",
+    "//services/js/modules/clock",
+    "//services/js/modules/gl",
+    "//services/js/system",
+  ]
+}
+
+test("js_services_unittests") {
+  deps = [
+    "//gin:gin_test",
+    "//mojo/edk/base_edk",
+    "//mojo/edk/test:run_all_unittests",
+    "//mojo/environment:chromium",
+    "//mojo/public/interfaces/bindings/tests:test_interfaces",
+    "//services/js/modules/clock/test",
+    "//services/js/system",
+  ]
+}
+
+mojo_native_application("js_apptests") {
+  testonly = true
+
+  sources = [
+    "echo_apptest.cc",
+    "network_apptest.cc",
+    "pingpong_apptest.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/public/cpp/application",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/cpp/system",
+    "//services/js/test:echo_service",
+    "//services/js/test:echo_service_sync",
+    "//services/js/test:js_application_test_base",
+    "//services/js/test:network_test_service",
+    "//services/js/test:pingpong_service",
+  ]
+}

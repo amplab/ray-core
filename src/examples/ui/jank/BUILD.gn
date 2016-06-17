@@ -1,0 +1,33 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+
+mojo_native_application("jank") {
+  output_name = "jank_view"
+
+  sources = [
+    "jank.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/application",
+    "//mojo/environment:chromium",
+    "//mojo/gpu",
+    "//mojo/public/c/gpu",
+    "//mojo/public/cpp/bindings",
+    "//mojo/services/geometry/interfaces",
+    "//mojo/services/gfx/composition/interfaces",
+    "//mojo/services/ui/input/interfaces",
+    "//mojo/services/ui/views/interfaces",
+    "//mojo/skia",
+    "//mojo/ui",
+    "//mojo/ui:content",
+    "//mojo/ui:ganesh",
+    "//mojo/ui:gl",
+    "//skia",
+    "//third_party/dejavu-fonts-ttf-2.34:DejaVuSansMonoRegular",
+  ]
+}

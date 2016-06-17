@@ -1,0 +1,73 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+
+mojo_native_application("files") {
+  sources = [
+    "main.cc",
+  ]
+
+  deps = [
+    ":lib",
+    "//mojo/application",
+  ]
+}
+
+# Library that allows the service code to be included directly into the
+# embedding shell. Used by https://manganese.googlesource.com/.
+source_set("lib") {
+  sources = [
+    "directory_impl.cc",
+    "directory_impl.h",
+    "file_impl.cc",
+    "file_impl.h",
+    "files_app.cc",
+    "files_app.h",
+    "files_impl.cc",
+    "files_impl.h",
+    "futimens.h",
+    "futimens_android.cc",
+    "shared_impl.cc",
+    "shared_impl.h",
+    "util.cc",
+    "util.h",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/application",
+    "//mojo/common",
+    "//mojo/public/cpp/application",
+    "//mojo/public/cpp/bindings:callback",
+    "//mojo/public/cpp/system",
+    "//mojo/services/files/interfaces",
+  ]
+}
+
+mojo_native_application("apptests") {
+  output_name = "files_apptests"
+
+  testonly = true
+
+  sources = [
+    "directory_impl_unittest.cc",
+    "file_impl_unittest.cc",
+    "files_test_base.cc",
+    "files_test_base.h",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/application",
+    "//mojo/application:test_support",
+    "//mojo/public/cpp/bindings",
+    "//mojo/services/files/interfaces",
+    "//mojo/services/files/interfaces:interfaces_sync",
+  ]
+
+  data_deps = [
+    ":files($default_toolchain)",
+  ]
+}

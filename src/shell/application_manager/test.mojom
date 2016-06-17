@@ -1,0 +1,25 @@
+// Copyright 2014 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+module shell;
+
+[ServiceName="shell.TestService"]
+interface TestService {
+  Test(string test_string) => ();
+};
+
+[ServiceName="shell.TestA"]
+interface TestA {
+  CallB();
+};
+
+[ServiceName="shell.TestB"]
+interface TestB {
+  B() => ();
+};
+
+[ServiceName="shell.TestC"]
+interface TestC {
+  C() => ();
+};

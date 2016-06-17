@@ -1,0 +1,44 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+
+group("audio_play_test") {
+  deps = [
+    ":play_tone",
+    ":play_wav",
+  ]
+}
+
+mojo_native_application("play_wav") {
+  deps = [
+    "//mojo/public/cpp/application:standalone",
+    "//mojo/public/cpp/system",
+    "//mojo/public/cpp/utility",
+    "//mojo/services/media/audio/interfaces",
+    "//mojo/services/media/common/cpp",
+    "//mojo/services/media/common/interfaces",
+    "//mojo/services/media/core/interfaces",
+    "//mojo/services/network/interfaces",
+  ]
+
+  sources = [
+    "play_wav.cc",
+  ]
+}
+
+mojo_native_application("play_tone") {
+  deps = [
+    "//mojo/public/cpp/application:standalone",
+    "//mojo/public/cpp/utility",
+    "//mojo/services/media/audio/interfaces",
+    "//mojo/services/media/common/cpp",
+    "//mojo/services/media/common/interfaces",
+    "//mojo/services/media/core/interfaces",
+  ]
+
+  sources = [
+    "play_tone.cc",
+  ]
+}

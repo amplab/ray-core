@@ -1,0 +1,15 @@
+# This file contains a list of Go tests that should be run by the script
+# mojo/tools/run_pure_go_tests.py.
+#
+# The contents should be valid Python defining a global variable named
+# "test_dirs" defined as a list of paths relative to the Mojo source root
+# of directories containing a Go package. Use forward slash ("/") as the
+# path separator.
+test_dirs = [
+   'mojom/mojom_tool/integration_tests',
+   'mojom/mojom_tool/lexer',
+   'mojom/mojom_tool/mojom',
+   'mojom/mojom_tool/parser',
+   'mojom/mojom_tool/serialization',
+   'mojom/mojom_tool/utils',
+]

@@ -1,0 +1,16 @@
+// Copyright 2015 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[JavaPackage="org.chromium.mojom.nfc"]
+module nfc;
+
+// Database for the nfc implementation.
+// This struct is used to persist state for the nfc service and is
+// not passed between services.
+struct Db {
+  // Version of the database.
+  uint32 version;
+  // List of registered applications.
+  array<string> registered_applications;
+};

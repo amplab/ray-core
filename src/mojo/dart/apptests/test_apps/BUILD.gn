@@ -1,0 +1,28 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/tools/bindings/mojom.gni")
+
+group("test_apps") {
+  deps = [
+    ":echo_service_interface",
+    ":pingpong_service_interface",
+    "//mojo/dart/apptests/test_apps/echo",
+    "//mojo/dart/apptests/test_apps/echo_with_service_describer",
+    "//mojo/dart/apptests/test_apps/pingpong",
+    "//mojo/dart/apptests/test_apps/pingpong_target",
+  ]
+}
+
+mojom("echo_service_interface") {
+  sources = [
+    "interfaces/echo_service.mojom",
+  ]
+}
+
+mojom("pingpong_service_interface") {
+  sources = [
+    "interfaces/pingpong_service.mojom",
+  ]
+}

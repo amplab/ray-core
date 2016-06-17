@@ -1,0 +1,211 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+import("//mojo/tools/embed/rules.gni")
+
+# Trusted code
+if (!is_nacl) {
+  if (current_cpu == "x86" || current_cpu == "arm") {
+    # Non-SFI NaCl can only be executed by a 32-bit process, so our
+    # content handler must be built and launched as a 32-bit process as well.
+    mojo_native_application("content_handler_nexe_32_bit") {
+      output_name = "content_handler_nonsfi_nexe"
+      sources = [
+        "content_handler_main_nexe.cc",
+      ]
+
+      deps = [
+        "//base",
+        "//mojo/application:application",
+        "//mojo/application:content_handler",
+        "//mojo/data_pipe_utils",
+        "//mojo/message_pump",
+        "//mojo/nacl/nonsfi:irt_mojo",
+        "//mojo/public/cpp/application:application",
+        "//native_client/src/nonsfi/loader:elf_loader",
+      ]
+    }
+    mojo_native_application("content_handler_pexe_32_bit") {
+      output_name = "content_handler_nonsfi_pexe"
+      sources = [
+        "content_handler_main_pexe.cc",
+      ]
+
+      deps = [
+        ":pnacl_translator_bindings_sync",
+        "//base",
+        "//mojo/application:application",
+        "//mojo/application:content_handler",
+        "//mojo/data_pipe_utils",
+        "//mojo/file_utils",
+        "//mojo/message_pump",
+        "//mojo/nacl/nonsfi:irt_mojo",
+        "//mojo/services/files/interfaces",
+        "//mojo/services/files/interfaces:interfaces_sync",
+        "//native_client/src/nonsfi/loader:elf_loader",
+      ]
+    }
+    mojo_native_application("pnacl_compile_32_bit") {
+      output_name = "pnacl_compile"
+      sources = [
+        "pnacl_compile.cc",
+      ]
+
+      deps = [
+        ":pnacl_translator_bindings",
+        ":pnacl_translator_compile_file",
+        "//base",
+        "//mojo/nacl/nonsfi:irt_mojo",
+        "//mojo/public/cpp/application:standalone",
+        "//native_client/src/nonsfi/loader:elf_loader",
+      ]
+    }
+    mojo_native_application("pnacl_link_32_bit") {
+      output_name = "pnacl_link"
+      sources = [
+        "pnacl_link.cc",
+      ]
+
+      deps = [
+        ":ld_file",
+        ":pnacl_translator_bindings",
+        "//base",
+        "//mojo/nacl/nonsfi:irt_mojo",
+        "//mojo/public/cpp/application:standalone",
+        "//native_client/src/nonsfi/loader:elf_loader",
+      ]
+    }
+
+    # Copy to the root build directory so that the '#!' prefix line for invoking
+    # our content handler can simply be "mojo:content_handler_nonsfi".
+    # Either way, build the same dependencies.
+    shared_deps = [
+      ":content_handler_nexe_32_bit",
+      ":content_handler_pexe_32_bit",
+      ":pnacl_compile_32_bit",
+      ":pnacl_link_32_bit",
+    ]
+    if (root_out_dir != root_build_dir) {
+      copy("content_handler_copy") {
+        sources = [
+          "${root_out_dir}/content_handler_nonsfi_nexe.mojo",
+          "${root_out_dir}/content_handler_nonsfi_pexe.mojo",
+          "${root_out_dir}/pnacl_compile.mojo",
+          "${root_out_dir}/pnacl_link.mojo",
+        ]
+        outputs = [
+          "${root_build_dir}/{{source_file_part}}",
+        ]
+        deps = shared_deps
+      }
+    } else {
+      group("content_handler_copy") {
+        deps = shared_deps
+      }
+    }
+  }
+}
+
+# This group serves as a 64 to 32 bit transformation for Linux. If we are
+# using a 64 bit toolchain, build the nonsfi nacl content handler as 32 bit.
+group("content_handler") {
+  deps = []
+  if ((target_cpu == "x64" || target_cpu == "x86") && is_linux) {
+    # The toolchain is hardcoded as 32-bit clang here -- although it must
+    # be 32 bit (for nonsfi), it assumes clang. Ideally, the toolchain would
+    # be defined as the 32 bit variant of whatever is being used (be it clang,
+    # gcc, or something else).
+    deps += [ ":content_handler_copy(//build/toolchain/linux:clang_x86)" ]
+  } else {
+    deps += [ ":content_handler_copy" ]
+  }
+}
+
+# Create embedded files usable by the PNaCl translation services.
+if (current_cpu == "x86" || current_cpu == "x64") {
+  pnacl_file_location_prefix = "//native_client/toolchain/linux_x86/pnacl_translator/translator/x86-32-nonsfi"
+} else if (current_cpu == "arm") {
+  pnacl_file_location_prefix = "//native_client/toolchain/linux_x86/pnacl_translator/translator/arm-nonsfi"
+} else {
+  assert(false, "Architecture not recognized by Non-SFI NaCl")
+}
+
+embed_file("ld_file") {
+  source = "${pnacl_file_location_prefix}/bin/ld.nexe"
+  namespace = "nacl"
+  variable = "kLdNexe"
+}
+
+embed_file("pnacl_translator_compile_file") {
+  if (current_cpu == "arm") {
+    source = "${pnacl_file_location_prefix}/bin/pnacl-llc.nexe"
+  } else if (current_cpu == "x86" || current_cpu == "x64") {
+    source = "${pnacl_file_location_prefix}/bin/pnacl-sz.nexe"
+  } else {
+    assert(false, "Architecture not recognized by Non-SFI NaCl")
+  }
+  namespace = "nacl"
+  variable = "kPnaclTranslatorCompile"
+}
+
+# Create embedded files usable by the PNaCl translation IRT.
+embed_file("crtbegin_file") {
+  source = "${pnacl_file_location_prefix}/lib/crtbegin.o"
+  namespace = "nacl"
+  variable = "kCrtbegin"
+}
+embed_file("crtbegin_for_eh_file") {
+  source = "${pnacl_file_location_prefix}/lib/crtbegin_for_eh.o"
+  namespace = "nacl"
+  variable = "kCrtbeginForEh"
+}
+embed_file("crtend_file") {
+  source = "${pnacl_file_location_prefix}/lib/crtend.o"
+  namespace = "nacl"
+  variable = "kCrtend"
+}
+embed_file("libcrt_platform_file") {
+  source = "${pnacl_file_location_prefix}/lib/libcrt_platform.a"
+  namespace = "nacl"
+  variable = "kLibcrtPlatform"
+}
+embed_file("libgcc_file") {
+  source = "${pnacl_file_location_prefix}/lib/libgcc.a"
+  namespace = "nacl"
+  variable = "kLibgcc"
+}
+embed_file("libpnacl_irt_shim_dummy_file") {
+  source = "${pnacl_file_location_prefix}/lib/libpnacl_irt_shim_dummy.a"
+  namespace = "nacl"
+  variable = "kLibpnaclIrtShimDummy"
+}
+
+# Collection of mojom bindings and files necessary for pnacl translation by the
+# IRT.
+group("pnacl_translator_irt") {
+  public_deps = [
+    ":pnacl_translator_bindings",
+    ":pnacl_translator_irt_files",
+  ]
+}
+
+group("pnacl_translator_irt_files") {
+  public_deps = [
+    ":crtbegin_file",
+    ":crtbegin_for_eh_file",
+    ":crtend_file",
+    ":libcrt_platform_file",
+    ":libgcc_file",
+    ":libpnacl_irt_shim_dummy_file",
+  ]
+}
+
+mojom("pnacl_translator_bindings") {
+  sources = [
+    "pnacl_compile.mojom",
+    "pnacl_link.mojom",
+  ]
+}

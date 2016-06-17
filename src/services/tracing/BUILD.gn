@@ -1,0 +1,40 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+
+mojo_native_application("tracing") {
+  sources = [
+    "main.cc",
+  ]
+
+  deps = [
+    ":lib",
+    "//mojo/application",
+  ]
+}
+
+# Library that allows the service code to be included directly into the
+# embedding shell. Used by https://manganese.googlesource.com/.
+source_set("lib") {
+  sources = [
+    "trace_data_sink.cc",
+    "trace_data_sink.h",
+    "trace_recorder_impl.cc",
+    "trace_recorder_impl.h",
+    "tracing_app.cc",
+    "tracing_app.h",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/application",
+    "//mojo/common",
+    "//mojo/data_pipe_utils",
+    "//mojo/public/cpp/application",
+    "//mojo/public/cpp/system",
+    "//mojo/services/tracing/interfaces",
+  ]
+}

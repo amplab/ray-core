@@ -1,0 +1,9 @@
+Name: DejaVu fonts
+URL: http://dejavu-fonts.org/
+Version: 2.34
+License: Custom license (Bitstream Vera Fonts Copyright, Arev Fonts Copyright, Public Domain)
+License File: LICENSE
+Security Critical: no
+
+Description:
+DejaVu fonts 2.34 (TrueType), stripped down to just DejaVu Sans Mono (regular).

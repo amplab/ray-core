@@ -1,0 +1,36 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+source_set("framework_mojo") {
+  sources = [
+    "mojo_allocator.cc",
+    "mojo_allocator.h",
+    "mojo_consumer.cc",
+    "mojo_consumer.h",
+    "mojo_formatting.cc",
+    "mojo_formatting.h",
+    "mojo_producer.cc",
+    "mojo_producer.h",
+    "mojo_pull_mode_producer.cc",
+    "mojo_pull_mode_producer.h",
+    "mojo_reader.cc",
+    "mojo_reader.h",
+    "mojo_type_conversions.cc",
+    "mojo_type_conversions.h",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/common",
+    "//mojo/public/cpp/application",
+    "//mojo/services/media/audio/interfaces",
+    "//mojo/services/media/common/cpp",
+    "//mojo/services/media/common/interfaces",
+    "//mojo/services/media/control/interfaces",
+    "//mojo/services/media/core/interfaces",
+    "//mojo/services/network/interfaces",
+    "//services/media/framework",
+    "//services/util/cpp",
+  ]
+}

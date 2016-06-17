@@ -1,0 +1,165 @@
+# This file contains a list of Mojo apptests. For description of the file
+# format, see `mojo_test` in devtools.
+
+tests = [
+  {
+    "test": "mojo:asset_bundle_apptests",
+  },
+  {
+    "test": "mojo:authenticating_url_loader_interceptor_apptests",
+  },
+  {
+    "test": "mojo:benchmark_apptests",
+  },
+  {
+    "test": "mojo:clipboard_apptests",
+  },
+  {
+    "test": "mojo:compositor_apptests",
+    "shell-args": ["--args-for=mojo:native_viewport_service --use-test-config"],
+  },
+  {
+    "test": "mojo:example_apptests",
+    # ExampleApplicationTest.CheckCommandLineArg checks --example_apptest_arg.
+    "test-args": ["--example_apptest_arg"],
+  },
+  {
+    "test": "mojo:example_apptests",
+    "name": "mojo:example_apptests (multiprocess)",
+    # ExampleApplicationTest.CheckCommandLineArg checks --example_apptest_arg.
+    "test-args": ["--example_apptest_arg"],
+    "shell-args": ["--enable-multiprocess"],
+  },
+  {
+    "test": "mojo:file_utils_apptests",
+  },
+  {
+    "test": "mojo:files_apptests",
+  },
+  {
+    "test": "mojo:files_impl_apptests",
+  },
+  {
+    "test": "mojo:http_server_apptests",
+  },
+  {
+    "test": "mojo:log_client_apptests"
+  },
+  {
+    "test": "mojo:log_impl_apptests"
+  },
+  {
+    "test": "mojo:mojio_apptests",
+  },
+  {
+    "test": "mojo:mojo_common_apptests",
+  },
+  {
+    "test": "mojo:mojo_data_pipe_utils_apptests",
+  },
+  {
+    "test": "mojo:mojo_message_pump_apptests",
+  },
+  {
+    "test": "mojo:moterm_apptests",
+  },
+  {
+    "test": "mojo:network_service_apptests",
+  },
+  {
+    "test": "mojo:prediction_apptests",
+  },
+  {
+    "test": "mojo:ui_apptests",
+    "shell-args": ["--args-for=mojo:native_viewport_service --use-headless-config --use-osmesa"],
+  },
+  {
+    "test": "mojo:ui_associates_apptests",
+  },
+  {
+    "test": "mojo:view_manager_apptests",
+  },
+  {
+    "test": "mojo:url_response_disk_cache_apptests",
+  },
+  {
+    "test": "mojo:versioning_apptests",
+  },
+  {
+    "test": "mojo:platform_handle_private_apptests",
+  },
+  {
+    "test": "mojo:image_pipe_apptests",
+  },
+]
+
+if target_os == 'linux':
+  tests += [
+    {
+      "test": "mojo:example_apptests",
+      "name": "mojo:example_apptests (python_example_service)",
+      # ExampleApplicationTest.CheckCommandLineArg checks --example_apptest_arg.
+      "test-args": ["--example_apptest_arg"],
+      "shell-args": [
+        "--url-mappings=mojo:example_service=mojo:python_example_service"
+      ],
+    },
+    {
+      "test": "mojo:mojo_url_redirector_apptests",
+      "test-args": ["--redirector_port=49152",
+                    "--app_location_files_port=49153"],
+      "shell-args": ["--args-for=mojo:mojo_url_redirector 0.0.0.0:49152 http://localhost:49153"],
+    }
+  ]
+
+if target_os == 'android':
+  tests += [
+    {
+      "test": "mojo:example_apptests",
+      "name": "mojo:example_apptests (android_example_service)",
+      # ExampleApplicationTest.CheckCommandLineArg checks --example_apptest_arg.
+      "test-args": ["--example_apptest_arg"],
+      "shell-args": [
+        "--url-mappings=mojo:example_service=mojo:android_example_service"
+      ],
+    },
+    {
+      "test": "mojo:contacts_apptests",
+    },
+    {
+      "test": "mojo:notification_apptests",
+    },
+    {
+      "test": "mojo:shell_nfc_apptests",
+    },
+  ]
+
+if target_os != 'android':
+  tests += [
+    {
+      "test": "mojo:dart_apptests",
+      "name": "mojo:dart_apptests (message loop)",
+      "type": "dart",
+      "shell-args": [
+        "--args-for=mojo:dart_content_handler --run-on-message-loop"
+      ],
+    },
+    {
+      "test": "mojo:dart_apptests",
+      "type": "dart",
+    },
+    {
+      "test": "mojo:js_apptests",
+      "type": "gtest_isolated",
+    },
+    {
+      # These tests rely on various things in /bin.
+      "test": "mojo:native_support_apptests",
+    },
+    {
+      # https://github.com/domokit/mojo/issues/61
+      # Sometime the shell get a trucated application when exposed through the
+      # http server.
+      "test": "mojo:shell_apptests",
+    },
+  ]

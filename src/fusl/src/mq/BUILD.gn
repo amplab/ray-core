@@ -1,0 +1,20 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//fusl/fusl.gni")
+
+fusl_source_set("mq") {
+  sources = [
+    "mq_close.c",
+    "mq_getattr.c",
+    "mq_notify.c",
+    "mq_open.c",
+    "mq_receive.c",
+    "mq_send.c",
+    "mq_setattr.c",
+    "mq_timedreceive.c",
+    "mq_timedsend.c",
+    "mq_unlink.c",
+  ]
+}

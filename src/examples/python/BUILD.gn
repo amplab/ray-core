@@ -1,0 +1,27 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/python/rules.gni")
+
+group("python") {
+  testonly = true
+  deps = [
+    ":python_example_service",
+  ]
+}
+
+python_packaged_application("python_example_service") {
+  sources = [
+    "__mojo__.py",
+  ]
+  deps = [
+    "//examples/apptest:bindings_python",
+    "//mojo/public/interfaces/application:application_python",
+    "//mojo/public/python:packaged_application",
+    "//mojo/public/python:packaged_bindings",
+  ]
+  datadeps = [
+    "//services/python/content_handler",
+  ]
+}

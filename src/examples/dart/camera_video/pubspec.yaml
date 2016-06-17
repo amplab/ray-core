@@ -1,0 +1,5 @@
+name: camera
+dependencies:
+  flutter: ^0.0.6
+  mojo_services: ^0.3.0
+  sky_tools: ^0.0.24

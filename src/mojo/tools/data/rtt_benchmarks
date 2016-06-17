@@ -1,0 +1,193 @@
+# This file contains a list of Mojo benchmarks. For description of the file
+# format, see `mojo_benchmark --help`.
+
+benchmarks = [
+  {
+    'name': 'cpp-cpp ipc round trip time',
+    'app': 'https://core.mojoapps.io/echo_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/echo_benchmark/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/echo_benchmark/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/echo_benchmark/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/echo_benchmark/ping/0.90'},
+    ],
+    'shell-args': [
+      '--args-for=https://core.mojoapps.io/echo_benchmark.mojo --early-tracing',
+    ]
+  },
+  {
+    'name': 'cpp-dart ipc round trip time',
+    'app': 'https://core.mojoapps.io/echo_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/echo_benchmark/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/echo_benchmark/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/echo_benchmark/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/echo_benchmark/ping/0.90'},
+    ],
+    'shell-args': [
+      '--args-for=https://core.mojoapps.io/echo_benchmark.mojo --early-tracing --dart-server',
+    ]
+  },
+  {
+    'name': 'dart-dart ipc round trip time',
+    'app': 'https://core.mojoapps.io/dart_rtt_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/Dart/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.90'},
+    ],
+    'shell-args': [
+      '--args-for=mojo:dart_content_handler --dart-timeline',
+    ]
+  },
+  {
+    'name': 'dart-dart ipc round trip time (message loop)',
+    'app': 'https://core.mojoapps.io/dart_rtt_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/Dart/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.90'},
+    ],
+    'shell-args': [
+      '--args-for=mojo:dart_content_handler --dart-timeline --run-on-message-loop',
+    ]
+  },
+  {
+    'name': 'dart-cpp ipc round trip time',
+    'app': 'https://core.mojoapps.io/dart_rtt_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/Dart/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.90'},
+    ],
+    'shell-args': [
+      '--args-for=https://core.mojoapps.io/dart_rtt_benchmark.mojo --cpp-server',
+      '--args-for=mojo:dart_content_handler --dart-timeline',
+    ]
+  },
+  {
+    'name': 'dart-cpp ipc round trip time (message loop)',
+    'app': 'https://core.mojoapps.io/dart_rtt_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/Dart/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.90'},
+    ],
+    'shell-args': [
+      '--args-for=https://core.mojoapps.io/dart_rtt_benchmark.mojo --cpp-server',
+      '--args-for=mojo:dart_content_handler --dart-timeline --run-on-message-loop',
+    ]
+  },
+  {
+    'name': 'dart isolate message round trip time',
+    'app': 'https://core.mojoapps.io/dart_isolate_rtt_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/Dart/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.90'},
+    ],
+    'shell-args': [
+      '--args-for=mojo:dart_content_handler --dart-timeline',
+    ]
+  },
+  {
+    'name': 'dart isolate message round trip time (message loop)',
+    'app': 'https://core.mojoapps.io/dart_isolate_rtt_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/Dart/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.90'},
+    ],
+    'shell-args': [
+      '--args-for=mojo:dart_content_handler --dart-timeline --run-on-message-loop',
+    ]
+  },
+  {
+    'name': 'many client cpp-cpp ipc round trip time',
+    'app': 'https://core.mojoapps.io/echo_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/echo_benchmark/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/echo_benchmark/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/echo_benchmark/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/echo_benchmark/ping/0.90'},
+    ],
+    'shell-args': [
+     '--args-for=https://core.mojoapps.io/echo_benchmark.mojo --early-tracing --num-clients=100 --num-active-clients=100',
+    ]
+  },
+  {
+    'name': 'many client dart-dart ipc round trip time',
+    'app': 'https://core.mojoapps.io/dart_rtt_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/Dart/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.90'},
+    ],
+    'shell-args': [
+      '--args-for=https://core.mojoapps.io/dart_rtt_benchmark.mojo --num-clients=100 --num-active-clients=100',
+      '--args-for=mojo:dart_content_handler --dart-timeline',
+    ]
+  },
+  {
+    'name': 'many client dart-dart ipc round trip time (message loop)',
+    'app': 'https://core.mojoapps.io/dart_rtt_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/Dart/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.90'},
+    ],
+    'shell-args': [
+      '--args-for=https://core.mojoapps.io/dart_rtt_benchmark.mojo --num-clients=100 --num-active-clients=100',
+      '--args-for=mojo:dart_content_handler --dart-timeline --run-on-message-loop',
+    ]
+  },
+  {
+    'name': 'many client dart-cpp ipc round trip time',
+    'app': 'https://core.mojoapps.io/dart_rtt_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/Dart/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.90'},
+    ],
+    'shell-args': [
+      '--args-for=https://core.mojoapps.io/dart_rtt_benchmark.mojo --cpp-server --num-clients=100 --num-active-clients=100',
+      '--args-for=mojo:dart_content_handler --dart-timeline',
+    ]
+  },
+  {
+    'name': 'many client dart-cpp ipc round trip time (message loop)',
+    'app': 'https://core.mojoapps.io/dart_rtt_benchmark.mojo',
+    'duration': 10,
+    'measurements': [
+      {'name': 'avg ping', 'spec': 'avg_duration/Dart/ping'},
+      {'name': '10th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.10'},
+      {'name': '50th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.50'},
+      {'name': '90th percentile ping', 'spec': 'percentile_duration/Dart/ping/0.90'},
+    ],
+    'shell-args': [
+      '--args-for=https://core.mojoapps.io/dart_rtt_benchmark.mojo --cpp-server --num-clients=100 --num-active-clients=100',
+      '--args-for=mojo:dart_content_handler --dart-timeline --run-on-message-loop',
+    ]
+  },
+]

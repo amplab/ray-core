@@ -1,0 +1,36 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/tools/bindings/mojom.gni")
+import("//mojo/android/rules.gni")
+
+mojo_android_java_application("camera") {
+  sources = [
+    "src/org/chromium/services/camera/CameraApp.java",
+    "src/org/chromium/services/camera/CameraServiceImpl.java",
+  ]
+
+  mojo_main = "org.chromium.services.camera.CameraApp"
+
+  deps = [
+    "//base:base_java",
+    "//mojo/public/interfaces/application:application_java",
+    "//mojo/public/java:application",
+    "//mojo/services/camera/interfaces:interfaces_java",
+  ]
+}
+
+mojo_android_java_application("camera_roll") {
+  sources = [
+    "src/org/chromium/services/camera_roll/CameraRollApp.java",
+  ]
+
+  mojo_main = "org.chromium.services.camera_roll.CameraRollApp"
+
+  deps = [
+    "//mojo/public/interfaces/application:application_java",
+    "//mojo/public/java:application",
+    "//mojo/services/camera/interfaces:interfaces_java",
+  ]
+}

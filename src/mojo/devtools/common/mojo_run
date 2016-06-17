@@ -1,0 +1,92 @@
+#!/usr/bin/env python
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import argparse
+import logging
+import sys
+
+from devtoolslib import shell_arguments
+from devtoolslib import shell_config
+from devtoolslib.utils import disable_output_buffering
+
+_DESCRIPTION = """Runner for Mojo applications.
+
+Any arguments not recognized by the script will be passed on as shell arguments.
+
+Important shell arguments include:
+  "--args-for=<mojo-app-url> <arguments>"
+  "--content-handlers=<handlers>"
+  "--disable-cache"
+  "--enable-multiprocess"
+  "--wait-for-debugger"
+  "<mojo-app-url>"
+  "<mojo-app-url> <arguments>"
+
+The value of <handlers> is a comma separated list like:
+text/html,mojo:html_viewer,application/javascript,mojo:js_content_handler
+"""
+
+# Port on which the mojo:debugger http server will be available on the host
+# machine.
+_MOJO_DEBUGGER_PORT = 7777
+_LAUNCHER = 'mojo:launcher'
+
+_DEBUGGER_URL = 'mojo:debugger'
+
+
+def _configure_debugger(shell):
+  """Configures debugger.mojo to run and sets up port forwarding for its http
+  server if the shell is running on a device.
+
+  Returns:
+    Arguments that need to be appended to the shell argument list in order to
+    run with the debugger.
+  """
+  shell.forward_host_port_to_shell(_MOJO_DEBUGGER_PORT)
+  return ['%s %d' % (_DEBUGGER_URL, _MOJO_DEBUGGER_PORT)]
+
+
+def main():
+  disable_output_buffering()
+  logging.basicConfig()
+
+  parser = argparse.ArgumentParser(
+      formatter_class=argparse.RawDescriptionHelpFormatter,
+      description=_DESCRIPTION)
+  shell_config.add_shell_arguments(parser)
+
+  parser.add_argument('--embed', type=str,
+                      help='Url to be embedded in the window manager.')
+  parser.add_argument('--debugger', action="store_true",
+                      help='Run debugger.mojo along with the app.')
+
+  script_args, shell_args = parser.parse_known_args()
+
+  try:
+    config = shell_config.get_shell_config(script_args)
+    shell, shell_args = shell_arguments.get_shell(config, shell_args)
+  except shell_config.ShellConfigurationException as e:
+    print e
+    return 1
+
+  if script_args.embed:
+    shell_args.append('%s %s' % (_LAUNCHER, script_args.embed))
+
+  if script_args.debugger:
+    if script_args.verbose:
+      print 'Spawning mojo:debugger, use `mojo_debug` to inspect the shell.'
+      print 'Note that mojo:debugger will prevent the shell from terminating,'
+      print '  pass --no-debugger to skip spawning mojo:debugger.'
+    shell_args.extend(_configure_debugger(shell))
+
+  if script_args.verbose:
+    print "Shell arguments: " + str(shell_args)
+
+  shell.run(shell_args)
+  return 0
+
+
+if __name__ == "__main__":
+  sys.exit(main())

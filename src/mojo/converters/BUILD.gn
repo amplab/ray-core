@@ -1,0 +1,15 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//testing/test.gni")
+
+test("mojo_converters_unittests") {
+  deps = [
+    "//mojo/converters/array_string:tests",
+    "//mojo/converters/base:tests",
+    "//mojo/converters/url:tests",
+    "//mojo/edk/test:run_all_unittests",
+    "//mojo/environment:chromium",
+  ]
+}

@@ -1,0 +1,61 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+
+source_set("lib") {
+  sources = [
+    "event.cc",
+    "event.h",
+    "measurements.cc",
+    "measurements.h",
+    "run_args.cc",
+    "run_args.h",
+    "trace_collector_client.cc",
+    "trace_collector_client.h",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/data_pipe_utils",
+  ]
+
+  public_deps = [
+    "//mojo/services/tracing/interfaces",
+  ]
+}
+
+mojo_native_application("benchmark") {
+  sources = [
+    "benchmark_app.cc",
+  ]
+
+  deps = [
+    ":lib",
+    "//base",
+    "//mojo/application",
+    "//mojo/public/cpp/application",
+    "//mojo/public/interfaces/application",
+  ]
+}
+
+mojo_native_application("apptests") {
+  output_name = "benchmark_apptests"
+
+  testonly = true
+
+  sources = [
+    "event_unittest.cc",
+    "measurements_unittest.cc",
+  ]
+
+  deps = [
+    ":lib",
+    "//base",
+    "//mojo/application",
+    "//mojo/application:test_support",
+    "//mojo/public/cpp/bindings:callback",
+    "//testing/gtest",
+  ]
+}

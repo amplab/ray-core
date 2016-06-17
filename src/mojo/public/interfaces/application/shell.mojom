@@ -1,0 +1,22 @@
+// Copyright 2014 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[DartPackage="mojo"]
+module mojo;
+
+import "mojo/public/interfaces/application/application_connector.mojom";
+import "mojo/public/interfaces/application/service_provider.mojom";
+
+// An interface through which a Mojo application may communicate with the Mojo
+// system and request connections to other applications.
+interface Shell {
+  // See |ApplicationConnector.ConnectToApplication()|.
+  //
+  // TODO(vtl): Maybe this should be deprecated/removed (in favor of just using
+  // |ApplicationConnector|).
+  ConnectToApplication(string application_url, ServiceProvider& services);
+
+  CreateApplicationConnector(
+      ApplicationConnector& application_connector_request);
+};

@@ -1,0 +1,57 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/tools/bindings/mojom.gni")
+
+source_set("gles2") {
+  visibility = [
+    "//shell:parent_lib",  # For android
+    "//services/native_viewport:*",
+  ]
+
+  sources = [
+    "command_buffer_driver.cc",
+    "command_buffer_driver.h",
+    "command_buffer_impl.cc",
+    "command_buffer_impl.h",
+    "gpu_impl.cc",
+    "gpu_impl.h",
+    "gpu_state.cc",
+    "gpu_state.h",
+    "mailbox_manager_factory.cc",
+    "mailbox_manager_factory.h",
+  ]
+
+  public_deps = [
+    ":lib",
+  ]
+  deps = [
+    "//base",
+    "//gpu/command_buffer/service",
+    "//mojo/converters/geometry",
+    "//mojo/public/cpp/bindings",
+    "//mojo/services/geometry/interfaces",
+    "//mojo/services/gpu/interfaces",
+    "//ui/gfx",
+    "//ui/gfx/geometry",
+    "//ui/gl",
+  ]
+}
+
+source_set("lib") {
+  sources = [
+    "command_buffer_type_conversions.cc",
+    "command_buffer_type_conversions.h",
+    "mojo_buffer_backing.cc",
+    "mojo_buffer_backing.h",
+  ]
+
+  deps = [
+    "//base",
+    "//gpu/command_buffer/common",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/cpp/system",
+    "//mojo/services/gpu/interfaces",
+  ]
+}

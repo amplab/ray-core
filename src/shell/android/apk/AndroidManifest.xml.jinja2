@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Copyright 2013 The Chromium Authors. All rights reserved.
+
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file.
+ -->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="{{ manifest_package }}"
+    android:versionCode="{{ version_code }}"
+    android:versionName="{{ version_name }}">
+
+    <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="23" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_CONDITIONS"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.NFC"/>
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT"/>
+
+    <application android:icon="@mipmap/ic_launcher"
+            android:name="org.chromium.mojo.shell.MojoShellApplication"
+            android:label="{{ apk_name }}"
+            android:debuggable="{{ debuggable }}">
+        <meta-data android:name="com.google.android.gms.version"
+                   android:value="@integer/google_play_services_version" />
+        <activity android:name="org.chromium.mojo.shell.MojoShellActivity"
+                  android:launchMode="standard"
+                  android:documentLaunchMode="none"
+                  android:theme="@style/Theme.Transparent">
+            <intent-filter>
+                <!-- A mojo://host/path url will load the app at the
+                     https://host/path URL.
+                 -->
+                <data android:scheme="mojo"/>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+            </intent-filter>
+        </activity>
+        <activity android:name="org.chromium.mojo.shell.ViewportActivity"
+                  android:theme="@android:style/Theme.Holo.Light.NoActionBar"
+                  android:configChanges="orientation|keyboardHidden|keyboard|screenSize"
+                  android:windowSoftInputMode="adjustPan"
+                  android:hardwareAccelerated="true">
+        </activity>
+        <activity android:name="org.chromium.mojo.shell.NfcReceiverActivity"
+                  android:theme="@style/Theme.Transparent" >
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="mojo/data"/>
+            </intent-filter>
+        </activity>
+        <activity android:name="org.chromium.mojo.shell.SharingActivity"
+                  android:theme="@style/Theme.Transparent"
+                  android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
+        </activity>
+        <activity android:name="org.chromium.mojo.shell.IntentReceiverActivity"
+                  android:theme="@style/Theme.Transparent">
+        </activity>
+        <service android:name="org.chromium.mojo.shell.ShellService" />
+    </application>
+
+</manifest>

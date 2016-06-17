@@ -1,0 +1,39 @@
+# This file contains a list of Non-SFI NaCl Mojo gtest app tests.
+# This must be a valid python dictionary.
+#
+# Multiprocess mode is required for the nonsfi nacl tests: the content
+# handler for these tests must exist in a 32-bit process but the parent
+# may be a 64-bit process. This makes multithreading insufficient for
+# these tests.
+tests = [
+  {
+    "test": "mojo:monacl_test_nonsfi",
+    "shell-args": ["--enable-multiprocess"],
+  },
+  {
+    "test": "mojo:http_server_apptests.pexe",
+    "shell-args": ["--enable-multiprocess"],
+  },
+  {
+    "test": "mojo:clipboard_apptests.pexe",
+    "shell-args": ["--enable-multiprocess"],
+  },
+  {
+    "test": "mojo:example_apptests.pexe",
+    # ExampleApplicationTest.CheckCommandLineArg checks --example_apptest_arg.
+    "shell-args": ["--enable-multiprocess"],
+    "test-args": ["--example_apptest_arg"],
+  },
+  {
+    "test": "mojo:files_apptests.pexe",
+    "shell-args": ["--enable-multiprocess"],
+  },
+  {
+    # This test translates and executes multiple apptests at the same time.
+    # To pass, each intermediate nexe made by pexe content handling must be
+    # given a unique process, or this test will crash.
+    "test": "mojo:files_apptests.pexe",
+    "name": "Multiprocess files + http_server apptests (both run at once)",
+    "shell-args": ["--enable-multiprocess", "mojo:http_server_apptests.pexe"],
+  },
+]

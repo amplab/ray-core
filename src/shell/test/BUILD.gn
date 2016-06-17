@@ -1,0 +1,28 @@
+import("//mojo/public/mojo.gni")
+import("//mojo/public/mojo_application.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+import("//testing/test.gni")
+
+mojom("bindings") {
+  sources = [
+    "pingable.mojom",
+  ]
+}
+
+mojo_native_application("pingable_app") {
+  output_name = "pingable_app"
+
+  testonly = true
+
+  sources = [
+    "pingable_app.cc",
+  ]
+
+  deps = [
+    ":bindings",
+    "//mojo/public/cpp/application:standalone",
+    "//mojo/public/cpp/bindings:callback",
+    "//mojo/public/cpp/environment",
+    "//mojo/public/cpp/system",
+  ]
+}

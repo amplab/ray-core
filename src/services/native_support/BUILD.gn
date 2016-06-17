@@ -1,0 +1,61 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+
+mojo_native_application("native_support") {
+  sources = [
+    "main.cc",
+    "make_pty_pair.cc",
+    "make_pty_pair.h",
+    "process_controller_impl.cc",
+    "process_controller_impl.h",
+    "process_impl.cc",
+    "process_impl.h",
+    "process_io_redirection.cc",
+    "process_io_redirection.h",
+    "redirectors.cc",
+    "redirectors.h",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/application",
+    "//mojo/common",
+    "//mojo/public/cpp/application",
+    "//mojo/public/cpp/bindings:callback",
+    "//mojo/public/cpp/system",
+    "//mojo/services/files/interfaces",
+    "//mojo/services/native_support/interfaces",
+  ]
+}
+
+mojo_native_application("apptests") {
+  output_name = "native_support_apptests"
+
+  testonly = true
+
+  sources = [
+    "process_controller_impl_unittest.cc",
+    "process_impl_unittest.cc",
+    "process_test_base.cc",
+    "process_test_base.h",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/application",
+    "//mojo/application:test_support",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/cpp/system",
+    "//mojo/services/files/cpp:files_impl",
+    "//mojo/services/files/interfaces",
+    "//mojo/services/native_support/interfaces",
+    "//mojo/services/native_support/interfaces:interfaces_sync",
+  ]
+
+  data_deps = [
+    ":native_support($default_toolchain)",
+  ]
+}

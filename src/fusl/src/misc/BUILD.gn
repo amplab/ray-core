@@ -1,0 +1,48 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//fusl/fusl.gni")
+
+fusl_source_set("misc") {
+  sources = [
+    "a64l.c",
+    "basename.c",
+    "dirname.c",
+    "ffs.c",
+    "ffsl.c",
+    "ffsll.c",
+    "fmtmsg.c",
+    "forkpty.c",
+    "get_current_dir_name.c",
+    "getauxval.c",
+    "getdomainname.c",
+    "gethostid.c",
+    "getopt.c",
+    "getopt_long.c",
+    "getpriority.c",
+    "getresgid.c",
+    "getresuid.c",
+    "getrlimit.c",
+    "getrusage.c",
+    "getsubopt.c",
+    "initgroups.c",
+    "ioctl.c",
+    "issetugid.c",
+    "lockf.c",
+    "login_tty.c",
+    "mntent.c",
+    "nftw.c",
+    "openpty.c",
+    "ptsname.c",
+    "pty.c",
+    "realpath.c",
+    "setdomainname.c",
+    "setpriority.c",
+    "setrlimit.c",
+    "syscall.c",
+    "syslog.c",
+    "uname.c",
+    "wordexp.c",
+  ]
+}
