@@ -1,0 +1,4 @@
+#!mojo mojo:forwarding_content_handler
+<target Mojo application URL goes here>
+
+

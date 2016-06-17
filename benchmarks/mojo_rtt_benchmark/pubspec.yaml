@@ -1,0 +1,11 @@
+name: mojo_rtt_benchmark
+author: Chromium Authors <mojo-dev@googlegroups.com>
+dependencies:
+  args: ^0.13.0
+  # The common directory is not found in any hosted packages.
+  common:
+    path: ../../mojo/common/dart
+  mojo: '>=0.4.0 <0.5.0'
+  # This is for echo.mojom.dart, which isn't in the hosted mojom package.
+  mojom:
+    path: ../../out/Debug/gen/dart-pkg/mojom

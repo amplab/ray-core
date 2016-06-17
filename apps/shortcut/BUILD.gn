@@ -1,0 +1,23 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+import("//mojo/android/rules.gni")
+
+mojo_android_java_application("shortcut") {
+  sources = [
+    "src/org/chromium/apps/shortcut/DataPipeInputStream.java",
+    "src/org/chromium/apps/shortcut/ShortcutApp.java",
+  ]
+
+  mojo_main = "org.chromium.apps.shortcut.ShortcutApp"
+
+  deps = [
+    "//mojo/public/interfaces/application:application_java",
+    "//mojo/public/interfaces/network:network_java",
+    "//mojo/public/java:application",
+    "//mojo/services/network/interfaces:interfaces_java",
+  ]
+}

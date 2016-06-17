@@ -1,0 +1,75 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/ui.gni")
+
+# This target will be built if no target is specified when invoking ninja.
+group("default") {
+  testonly = true
+
+  deps = [
+    "//apps",
+    "//base:base_unittests",
+    "//benchmarks",
+    "//crypto:crypto_unittests",
+    "//examples",
+    "//mojo",
+    "//mojom",
+    "//services",
+    "//shell",
+  ]
+
+  if (is_linux) {
+    deps += [
+      "//apps(//build/toolchain/fusl:fusl_${current_cpu})",
+      "//examples(//build/toolchain/fusl:fusl_${current_cpu})",
+      "//fusl",
+      "//services(//build/toolchain/fusl:fusl_${current_cpu})",
+
+      # We need this to run tests (especially on bots).
+      "//third_party/mesa:osmesa",
+    ]
+  }
+
+  # TODO(cstout): fix sandbox build for fnl/musl
+  if (is_linux && !is_fnl) {
+    deps += [
+      "//sandbox/linux:sandbox",
+      "//sandbox/linux:sandbox_linux_unittests",
+    ]
+  }
+  if (is_linux && !use_ozone) {
+    deps += [ "//tools/xdisplaycheck" ]
+  }
+
+  if (is_linux || is_android) {
+    deps += [
+      "//ui/events:events_unittests",
+      "//ui/gfx:gfx_unittests",
+    ]
+  }
+
+  if (use_ozone) {
+    deps += [ "//ui/ozone" ]
+  }
+}
+
+# Deprecated name for the default build target.
+group("root") {
+  testonly = true
+  deps = [
+    ":default",
+  ]
+}
+
+if (use_ozone) {
+  # This isn't in the default target as it's a bit wonky right now.
+  group("ozone_tests") {
+    testonly = true
+    deps = [
+      "//ui/ozone:ozone_unittests",
+      "//ui/ozone/demo",
+    ]
+  }
+}

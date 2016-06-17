@@ -1,0 +1,25 @@
+#!mojo mojo:sky_viewer
+<sky>
+<import src="dart-library.sky" as="library" />
+<style>
+ location { font-size: 2em; margin: 1em; }
+</style>
+<location>Getting location...</location>
+<script>
+import 'dart:async';
+import 'dart:sky';
+
+import 'package:sky/framework/embedder.dart';
+
+import 'package:mojo/services/location/interfaces/location_service.mojom.dart';
+
+main() async {
+  var locationService = new LocationServiceProxy.unbound();
+  embedder.connectToService("mojo:location_service", locationService);
+  var location = await locationService.ptr.getNextLocation(0);
+  locationService.close();
+  document.querySelector('location').textContent = "Latitude: ${location.location.latitude} ";
+  document.querySelector('location').textContent += "Longitude: ${location.location.longitude} ";
+}
+</script>
+</sky>

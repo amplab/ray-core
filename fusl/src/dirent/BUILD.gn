@@ -1,0 +1,23 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//fusl/fusl.gni")
+
+fusl_source_set("dirent") {
+  sources = [
+    "__getdents.c",
+    "alphasort.c",
+    "closedir.c",
+    "dirfd.c",
+    "fdopendir.c",
+    "opendir.c",
+    "readdir.c",
+    "readdir_r.c",
+    "rewinddir.c",
+    "scandir.c",
+    "seekdir.c",
+    "telldir.c",
+    "versionsort.c",
+  ]
+}

@@ -1,0 +1,163 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/nacl/config.gni")
+import("//build/module_args/mojo.gni")
+import("//mojo/public/mojo.gni")
+import("//testing/test.gni")
+
+declare_args() {
+  mojo_use_go = false
+}
+
+group("mojo") {
+  # Meta-target, don't link into production code.
+  testonly = true
+  deps = [
+    ":system_thunks",
+    ":tests",
+    "//mojo/common",
+    "//mojo/dart",
+    "//mojo/public",
+    "//mojo/services",
+  ]
+
+  if (is_android) {
+    deps += [
+      "//mojo/android",
+      "//mojo/java",
+      "//mojo/tools:remote_file_reader",
+    ]
+  }
+
+  if (is_linux && mojo_use_go) {
+    deps += [ "//mojo/go" ]
+  }
+
+  if (is_linux && !is_fnl) {
+    deps += [ "//mojo/python" ]
+  }
+
+  if (mojo_use_nacl) {
+    if (mojo_use_nacl_nonsfi) {
+      deps += [
+        "//mojo/nacl/nonsfi:mojo_nacl",
+        "//mojo/nacl/nonsfi:mojo_nacl_tests_nonsfi",
+      ]
+    }
+  }
+}
+
+group("tests") {
+  testonly = true
+  deps = [
+    ":public_tests",
+    "//mojo/common:mojo_common_apptests",
+    "//mojo/converters:mojo_converters_unittests",
+    "//mojo/dart:tests",
+    "//mojo/data_pipe_utils:mojo_data_pipe_utils_apptests",
+    "//mojo/edk:tests",
+    "//mojo/file_utils:file_utils_apptests",
+    "//mojo/gles2:mgl_unittests",
+    "//mojo/message_pump:mojo_message_pump_apptests",
+    "//mojo/public/cpp/bindings/tests:versioning_apptests",
+    "//mojo/public/platform/native:tests",
+    "//mojo/services/files/c:apptests",
+    "//mojo/services/files/cpp:files_impl_apptests",
+    "//mojo/services/gfx/composition/cpp:apptests",
+    "//mojo/services/gfx/images/cpp:image_pipe_apptest",
+    "//mojo/services/gfx/images/cpp:image_pipe_apptest",
+    "//mojo/services/log/cpp:log_client_apptests",
+    "//mojo/tools:message_generator",
+    "//mojo/ui:apptests",
+    "//mojo/ui/associates:apptests",
+  ]
+
+  if (mojo_use_prebuilt_network_service) {
+    deps += [ "//mojo/public/tools:copy_network_service_apptests" ]
+  }
+}
+
+# This archives the system thunks implementation for exporting to SDK consumers.
+static_library("system_thunks") {
+  complete_static_lib = true
+  deps = [
+    "//mojo/public/platform/native:system",
+  ]
+}
+
+# Public SDK test targets follow. These targets are not defined within the
+# public SDK itself since they are built as native executable binaries, needing
+# to be linked with the EDK.
+# TODO(vtl): They should be converted to "apptests", i.e., run as apps.
+
+group("public_tests") {
+  testonly = true
+  deps = [
+    ":mojo_public_application_unittests",
+    ":mojo_public_bindings_perftests",
+    ":mojo_public_bindings_unittests",
+    ":mojo_public_c_bindings_unittests",
+    ":mojo_public_environment_unittests",
+    ":mojo_public_system_perftests",
+    ":mojo_public_system_unittests",
+    ":mojo_public_utility_unittests",
+  ]
+}
+
+test("mojo_public_application_unittests") {
+  deps = [
+    "//mojo/edk/test:run_all_unittests",
+    "//mojo/public/cpp/application/tests",
+  ]
+}
+
+test("mojo_public_bindings_unittests") {
+  deps = [
+    "//mojo/edk/test:run_all_unittests",
+    "//mojo/public/cpp/bindings/tests",
+  ]
+}
+
+test("mojo_public_c_bindings_unittests") {
+  deps = [
+    "//mojo/edk/test:run_all_unittests",
+    "//mojo/public/c/bindings/tests",
+  ]
+}
+
+test("mojo_public_bindings_perftests") {
+  deps = [
+    "//mojo/edk/test:run_all_perftests",
+    "//mojo/public/cpp/bindings/tests:perftests",
+  ]
+}
+
+test("mojo_public_environment_unittests") {
+  deps = [
+    "//mojo/edk/test:run_all_unittests",
+    "//mojo/public/cpp/environment/tests",
+  ]
+}
+
+test("mojo_public_system_perftests") {
+  deps = [
+    "//mojo/edk/test:run_all_perftests",
+    "//mojo/public/c/system/tests:perftests",
+  ]
+}
+
+test("mojo_public_system_unittests") {
+  deps = [
+    "//mojo/edk/test:run_all_unittests",
+    "//mojo/public/cpp/system/tests",
+  ]
+}
+
+test("mojo_public_utility_unittests") {
+  deps = [
+    "//mojo/edk/test:run_all_unittests",
+    "//mojo/public/cpp/utility/tests",
+  ]
+}

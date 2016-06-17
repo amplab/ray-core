@@ -1,0 +1,17 @@
+// Copyright 2015 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[DartPackage="mojo_services",
+ JavaPackage="org.chromium.mojo.authentication"]
+module authentication;
+
+// Database for the authentication implementation.
+// This struct is used to persist state for the authentication service and is
+// not passed between services.
+struct Db {
+  // Version of the database.
+  uint32 version;
+  // Map from application to last selected account.
+  map<string, string> last_selected_accounts;
+};

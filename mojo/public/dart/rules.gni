@@ -1,0 +1,440 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This file has rules for making Dart packages and Dart-based Mojo applications.
+# The entrypoint is the dart_pkg rule.
+
+import("../mojo.gni")
+import("//build/module_args/mojo.gni")
+import("//build/module_args/dart.gni")
+
+template("dartx") {
+  bundle_prefix = target_name
+  bundle = "$target_gen_dir/${bundle_prefix}.dartx"
+  snapshot = "$target_gen_dir/${bundle_prefix}_snapshot.bin"
+  depfile_path = "${snapshot}.d"
+
+  if (mojo_use_prebuilt_dart_snapshotter) {
+    dart_snapshotter_path =
+        rebase_path("mojo/public/tools:copy_dart_snapshotter", ".", mojo_root)
+    dart_snapshotter_rule = "$dart_snapshotter_path($host_toolchain)"
+  } else {
+    dart_snapshotter_rule = dart_snapshotter_bin
+  }
+  dart_snapshotter_dir =
+      get_label_info("$dart_snapshotter_rule", "root_out_dir")
+  dart_snapshotter = "$dart_snapshotter_dir/dart_snapshotter"
+
+  action("gen_${bundle_prefix}_snapshot") {
+    main_dart = invoker.main_dart
+
+    depfile = depfile_path
+
+    inputs = [
+      dart_snapshotter,
+    ]
+    outputs = [
+      snapshot,
+    ]
+
+    if (defined(invoker.sources)) {
+      sources = invoker.sources
+    }
+
+    script =
+        rebase_path("mojo/public/tools/dart_snapshotter.py", ".", mojo_sdk_root)
+
+    args = [
+      rebase_path(dart_snapshotter),
+      rebase_path(main_dart),
+      "--package-root",
+      rebase_path("$root_gen_dir/dart-pkg/packages"),
+      "--snapshot",
+      rebase_path(snapshot),
+      "--depfile",
+      rebase_path(depfile_path),
+      "--build-output",
+      rebase_path(snapshot, root_build_dir),  # Relative to build directory
+    ]
+
+    deps = [
+      dart_snapshotter_rule,
+    ]
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
+  }
+
+  action("gen_${bundle_prefix}_bundle") {
+    sources = [
+      rebase_path("mojo/public/tools/dartx.py", ".", mojo_sdk_root),
+      snapshot,
+    ]
+
+    outputs = [
+      bundle,
+    ]
+
+    script = rebase_path("mojo/public/tools/dartx.py", ".", mojo_sdk_root)
+    args = [
+      "--snapshot",
+      rebase_path(snapshot),
+      "--output",
+      rebase_path(bundle),
+    ]
+
+    deps = [
+      ":gen_${bundle_prefix}_snapshot",
+    ]
+  }
+
+  group(target_name) {
+    public_deps = [
+      ":gen_${bundle_prefix}_bundle",
+    ]
+  }
+}
+
+template("dartx_application") {
+  dartx_name = "${target_name}_dartx"
+
+  dartx(dartx_name) {
+    main_dart = invoker.main_dart
+    if (defined(invoker.sources)) {
+      sources = invoker.sources
+    }
+    if (defined(invoker.deps)) {
+      deps = invoker.deps
+    }
+  }
+
+  if (defined(invoker.output_name)) {
+    mojo_output = "$root_out_dir/" + invoker.output_name + ".mojo"
+  } else {
+    mojo_output = "$root_out_dir/" + target_name + ".mojo"
+  }
+
+  action(target_name) {
+    script = rebase_path("mojo/public/tools/prepend.py", ".", mojo_sdk_root)
+
+    input = "$target_gen_dir/${dartx_name}.dartx"
+    inputs = [
+      input,
+    ]
+
+    output = mojo_output
+    outputs = [
+      output,
+    ]
+
+    deps = [
+      ":$dartx_name",
+    ]
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
+
+    line = "#!mojo mojo:dart_content_handler"
+    if (is_debug || (defined(invoker.strict) && invoker.strict == true)) {
+      line = "#!mojo mojo:dart_content_handler?strict=true"
+    }
+
+    rebase_input = rebase_path(input, root_build_dir)
+    rebase_output = rebase_path(output, root_build_dir)
+    args = [
+      "--input=$rebase_input",
+      "--output=$rebase_output",
+      "--line=$line",
+    ]
+  }
+}
+
+template("dart_pkg_helper") {
+  assert(defined(invoker.package_name))
+  package_name = invoker.package_name
+  pkg_directory = rebase_path("$root_gen_dir/dart-pkg")
+  package_root = rebase_path("$root_gen_dir/dart-pkg/packages")
+  stamp_file = "$root_gen_dir/dart-pkg/${package_name}.stamp"
+  entries_file = "$root_gen_dir/dart-pkg/${package_name}.entries"
+
+  assert(defined(invoker.sources) || defined(invoker.apps) ||
+         defined(invoker.libs) || defined(invoker.pkg_dir))
+
+  action(target_name) {
+    deps = []
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
+
+    datadeps = []
+    if (defined(invoker.datadeps)) {
+      datadeps += invoker.datadeps
+    }
+
+    sdk_ext_directory = []
+    if (defined(invoker.sdk_ext_directory)) {
+      sdk_ext_directory += [ invoker.sdk_ext_directory ]
+    }
+
+    sdk_ext_files = []
+    if (defined(invoker.sdk_ext_files)) {
+      sdk_ext_files += invoker.sdk_ext_files
+    }
+
+    sdk_ext_mappings = []
+    if (defined(invoker.sdk_ext_mappings)) {
+      sdk_ext_mappings += invoker.sdk_ext_mappings
+    }
+
+    script = rebase_path("mojo/public/tools/dart_pkg.py", ".", mojo_sdk_root)
+
+    entrypoints = []
+    if (defined(invoker.apps)) {
+      foreach(app, invoker.apps) {
+        entrypoints += [ app[1] ]
+      }
+    }
+    if (defined(invoker.libs)) {
+      entrypoints += invoker.libs
+    }
+
+    sources = entrypoints
+    extra_flags = []
+    if (defined(invoker.sources)) {
+      sources += invoker.sources
+    } else if (defined(invoker.pkg_dir)) {
+      list_script = rebase_path("mojo/public/tools/ls.py", ".", mojo_sdk_root)
+      extra_flags += [ "--read_only" ]
+      ls_sources = exec_script(list_script,
+                               [
+                                 "--target-directory",
+                                 rebase_path(invoker.pkg_dir),
+                               ],
+                               "list lines")
+      sources += ls_sources
+    }
+
+    # We have to use foreach to set up outputs instead of rebase_path because
+    # GN doesn't like assignments to outputs that aren't obviously under
+    # $root_gen_dir somewhere.
+    outputs = [
+      "$root_gen_dir/dart-pkg/${package_name}",
+      "$root_gen_dir/dart-pkg/packages/${package_name}",
+      stamp_file,
+    ]
+
+    inputs = [ script ] + rebase_path(sources)
+
+    args = [
+             "--package-name",
+             package_name,
+             "--dart-sdk",
+             rebase_path(dart_sdk_root),
+             "--pkg-directory",
+             pkg_directory,
+             "--package-root",
+             package_root,
+             "--stamp-file",
+             rebase_path(stamp_file),
+             "--entries-file",
+             rebase_path(entries_file),
+             "--package-sources",
+           ] + rebase_path(sources) + [ "--package-entrypoints" ] +
+           rebase_path(entrypoints) + [ "--sdk-ext-directories" ] +
+           rebase_path(sdk_ext_directory) + [ "--sdk-ext-files" ] +
+           rebase_path(sdk_ext_files) + [ "--sdk-ext-mappings" ] +
+           sdk_ext_mappings + extra_flags
+  }
+}
+
+# This is the entrypoint for organizing Dart code for Mojo.
+#
+# There should be a one to one mapping between dart_pkg rules and pubspec.yamls.
+#
+# This build rule will result in a package under $root_gen_dir/dart-pkg/
+#
+# The name of the package is taken from the 'pubspec.yaml' file.
+#
+# For each app in |apps|, it makes a .mojo Mojo application using the dartx
+# format as well as an assemblage of the app under $root_gen_dir/dart-pkg for
+# use in local development.
+#
+# For each library in |libs|, it invokes the Dart analyzer on that library. The
+# build will fail if the library is not analyzer clean.
+#
+# All other sources go in |sources|. This should at least contain the
+# 'pubspec.yaml' file.
+#
+# Even if a package will not be uploaded to pub, an attempt should be made not
+# to conflict with the names of existing pub packages, for example by using the
+# prefix 'mojo_dart_'.
+#
+#   sources
+#       List of sources to include in the package. This should at least contain
+#       the pubspec.yaml for the package.
+#
+#   apps (optional)
+#       List of pairs. [mojo_app_name, entrypoint.dart]. Each entrypoint
+#       script must contain a main() function. A .mojo Mojo application will be
+#       generated for each application.
+#
+#   libs (optional)
+#       List of library entrypoints to pass to the analyzer. If none are
+#       defined, the analyzer is not run.
+#
+#   strict (optional)
+#       If |apps| are specified, |strict| can be set to true to
+#       instruct the content handler to run the apps in Dart VM's strict
+#       compilation mode (with assertions and type-checks, etc.).
+#
+#   deps (optional)
+#       List of other dart_pkg targets for Dart packages imported by this
+#       dart_pkg, as well as the mojom targets needed by this dart_pkg.
+#
+#   pkg_dir (optional)
+#       Directory containing the package sources. This overrides sources and
+#       entrypoints. The analyzer will not be run.
+#
+#   datadeps (optional)
+#
+#   sdk_ext_directory (optional)
+#       Directory containing sdk-ext .dart sources.
+#
+#   sdk_ext_files (optional)
+#       List of sources to include in sdk-ext.
+#
+#   sdk_ext_mappings (optional)
+#       Mappings for dart libraries that are part of of sdk_ext.
+template("dart_pkg") {
+  if (defined(invoker.pkg_dir)) {
+    pubspec_yaml_path = rebase_path("pubspec.yaml", "", invoker.pkg_dir)
+  } else {
+    pubspec_yaml_path = rebase_path("pubspec.yaml")
+  }
+  dart_package_name_script =
+      rebase_path("mojo/public/tools/dart_package_name.py", ".", mojo_sdk_root)
+  dart_package_name = exec_script(dart_package_name_script,
+                                  [
+                                    "--pubspec",
+                                    pubspec_yaml_path,
+                                  ],
+                                  "trim string",
+                                  [ pubspec_yaml_path ])
+
+  dart_pkg_target_name = "${target_name}_pkg_helper"
+  dart_pkg_helper(dart_pkg_target_name) {
+    package_name = dart_package_name
+    if (defined(invoker.sources)) {
+      sources = invoker.sources
+    }
+    if (defined(invoker.apps)) {
+      apps = invoker.apps
+    }
+    if (defined(invoker.libs)) {
+      libs = invoker.libs
+    }
+    if (defined(invoker.pkg_dir)) {
+      pkg_dir = invoker.pkg_dir
+    }
+    if (defined(invoker.deps)) {
+      deps = invoker.deps
+    }
+    if (defined(invoker.datadeps)) {
+      datadeps = invoker.datadeps
+    }
+    if (defined(invoker.sdk_ext_directory)) {
+      sdk_ext_directory = invoker.sdk_ext_directory
+    }
+    if (defined(invoker.sdk_ext_files)) {
+      sdk_ext_files = invoker.sdk_ext_files
+    }
+    if (defined(invoker.sdk_ext_mappings)) {
+      sdk_ext_mappings = invoker.sdk_ext_mappings
+    }
+  }
+
+  if (defined(invoker.apps)) {
+    pkg_helper_output_dir = "$root_gen_dir/dart-pkg/${dart_package_name}"
+    foreach(app, invoker.apps) {
+      app_name = app[0]
+      app_entrypoint = app[1]
+      dartx_output_name = app_name
+      dartx_application("${app_name}_dart_app") {
+        output_name = dartx_output_name
+        main_dart = rebase_path(app_entrypoint, "", pkg_helper_output_dir)
+        sources = [
+          "$root_gen_dir/dart-pkg/${dart_package_name}.stamp",
+        ]
+        deps = [
+          ":$dart_pkg_target_name",
+        ]
+        deps += invoker.deps
+        if (defined(invoker.strict)) {
+          strict = invoker.strict
+        }
+      }
+    }
+  }
+
+  group(target_name) {
+    deps = [
+      ":$dart_pkg_target_name",
+    ]
+    if (defined(invoker.apps)) {
+      foreach(app, invoker.apps) {
+        app_name = app[0]
+        dartx_target_name = "${app_name}_dart_app"
+        deps += [ ":$dartx_target_name" ]
+      }
+    }
+  }
+}
+
+# Used to create dart_pkgs from a directory populated by fetch_dart_packages.py
+#
+# This build rule will result in a many packages under $root_gen_dir/dart-pkg/.
+#
+#   base_dir (optional)
+#       Directory populated by fetch_dart_packages.py. Defaults to BUILD.gn
+#       directory.
+template("dart_packages") {
+  base_dir = "."
+  if (defined(invoker.base_dir)) {
+    base_dir = invoker.base_dir
+  }
+
+  # Determine list of packages.
+  list_script = rebase_path("mojo/public/dart/tools/fetch_dart_packages.py",
+                            ".",
+                            mojo_sdk_root)
+  packages = exec_script(list_script,
+                         [
+                           "--directory",
+                           rebase_path(base_dir),
+                           "--list",
+                         ],
+                         "list lines",
+                         [
+                           rebase_path("pubspec.yaml"),
+                           rebase_path("pubspec.lock"),
+                         ])
+
+  # Generate dart_pkg for each package.
+  foreach(package_dir, packages) {
+    dart_pkg("$package_dir") {
+      pkg_dir = rebase_path("$package_dir")
+    }
+  }
+
+  # Generate target group.
+  group(target_name) {
+    deps = []
+    foreach(package_dir, packages) {
+      deps += [ ":$package_dir" ]
+    }
+    if (defined(invoker.deps)) {
+      deps += invoker.deps
+    }
+  }
+}

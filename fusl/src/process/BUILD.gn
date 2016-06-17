@@ -1,0 +1,46 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//fusl/fusl.gni")
+
+fusl_source_set("process") {
+  sources = [
+    "execl.c",
+    "execle.c",
+    "execlp.c",
+    "execv.c",
+    "execve.c",
+    "execvp.c",
+    "fexecve.c",
+    "fork.c",
+    "posix_spawn.c",
+    "posix_spawn_file_actions_addclose.c",
+    "posix_spawn_file_actions_adddup2.c",
+    "posix_spawn_file_actions_addopen.c",
+    "posix_spawn_file_actions_destroy.c",
+    "posix_spawn_file_actions_init.c",
+    "posix_spawnattr_destroy.c",
+    "posix_spawnattr_getflags.c",
+    "posix_spawnattr_getpgroup.c",
+    "posix_spawnattr_getsigdefault.c",
+    "posix_spawnattr_getsigmask.c",
+    "posix_spawnattr_init.c",
+    "posix_spawnattr_sched.c",
+    "posix_spawnattr_setflags.c",
+    "posix_spawnattr_setpgroup.c",
+    "posix_spawnattr_setsigdefault.c",
+    "posix_spawnattr_setsigmask.c",
+    "posix_spawnp.c",
+    "system.c",
+    "wait.c",
+    "waitid.c",
+    "waitpid.c",
+  ]
+
+  if (current_cpu == "x64") {
+    sources += [ "x86_64/vfork.s" ]
+  } else {
+    sources += [ "vfork.c" ]
+  }
+}

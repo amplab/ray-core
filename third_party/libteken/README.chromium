@@ -1,0 +1,24 @@
+Name: libteken
+URL: svn://svn.FreeBSD.org/base/head/sys/teken/
+Version: r276292
+License: BSD
+License File: COPYRIGHT
+Security Critical: no
+
+Description:
+This is libteken from FreeBSD, a VT100-ish terminal emulator library.
+
+It was obtained as follows (from this directory):
+
+  svn export svn://svn.FreeBSD.org/base/head/sys/teken/@276292
+  svn export svn://svn.FreeBSD.org/base/head/COPYRIGHT@276292
+
+Local modifications:
+* teken/teken_state.h: manually generated (from the teken subdirectory) using:
+  |awk -f gensequences sequences > teken_state.h|.
+* teken/teken.h: |#include <stdint.h>|.
+* teken/teken.h: |extern "C"| guards added for C++.
+* teken/gensequences: made executable, to placate checkperms.py.
+* teken/{demo, libteken, stress}: removed.
+* teken.c: remove sys/cdefs.h to fix fnl/musl build
+  (http://wiki.musl-libc.org/wiki/FAQ#Q:_I.27m_trying_to_compile_something_against_musl_and_I_get_error_messages_about_sys.2Fcdefs.h)

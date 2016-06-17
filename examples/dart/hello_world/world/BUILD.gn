@@ -1,0 +1,27 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/dart/rules.gni")
+
+dart_pkg("world") {
+  apps = [ [
+        "dart_world",
+        "lib/main.dart",
+      ] ]
+  sources = [
+    "pubspec.yaml",
+  ]
+  deps = [
+    "//mojo/dart/packages",
+    "//third_party/dart-pkg",
+  ]
+
+  # This exercises the ability of the Dart content handler to run isolates in
+  # either strict or non-strict mode at the same time. In a Debug build, the
+  # content handler always runs code in strict mode, so we run in different
+  # modes only in a Release build.
+  if (!is_debug) {
+    strict = true
+  }
+}

@@ -1,0 +1,57 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("../../mojo_sdk.gni")
+
+mojo_sdk_source_set("environment") {
+  sources = [
+    "async_waiter.h",
+    "environment.h",
+    "logging.h",
+  ]
+
+  mojo_sdk_public_deps = [ "mojo/public/c/environment" ]
+
+  mojo_sdk_deps = [
+    "mojo/public/cpp/bindings:callback",
+    "mojo/public/cpp/system",
+  ]
+}
+
+mojo_sdk_source_set("standalone") {
+  sources = [
+    "lib/async_waiter.cc",
+    "lib/default_async_waiter.cc",
+    "lib/default_async_waiter.h",
+    "lib/default_logger.cc",
+    "lib/default_logger.h",
+    "lib/environment.cc",
+    "lib/logging.cc",
+  ]
+
+  public_deps = [
+    ":environment",
+  ]
+
+  mojo_sdk_deps = [
+    "mojo/public/c/environment",
+    "mojo/public/cpp/system",
+    "mojo/public/cpp/utility",
+  ]
+}
+
+# This provides an implementation of only the logging portion of Environment
+# with minimal external dependencies.
+mojo_sdk_source_set("logging_only") {
+  sources = [
+    "lib/default_logger.cc",
+    "lib/default_logger.h",
+    "lib/logging.cc",
+    "lib/logging_only_environment.cc",
+  ]
+
+  public_deps = [
+    ":environment",
+  ]
+}

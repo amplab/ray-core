@@ -1,0 +1,50 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/dart/rules.gni")
+import("//mojo/services/mojo_services.gni")
+
+# TODO(johnmccutchan): Automate this.
+# for i in `find lib/|grep mojom.dart`;do echo \"$i\",;done
+bindings_sources = [
+  "lib/mojo/examples/echo.mojom.dart",
+  "lib/mojo/test/serialization_test_structs.mojom.dart",
+  "lib/mojo/test/validation_test_interfaces.mojom.dart",
+  "lib/mojo/test/test_unions.mojom.dart",
+  "lib/mojo/test/test_included_unions.mojom.dart",
+  "lib/mojo/test/rect.mojom.dart",
+  "lib/mojo/test/test_enums.mojom.dart",
+  "lib/mojo/test/test_structs.mojom.dart",
+  "lib/mojo/test/versioning/versioning_test_client.mojom.dart",
+  "lib/mojo/test/test_included_unions.mojom.dart",
+  "lib/dart_to_cpp/dart_to_cpp.mojom.dart",
+  "lib/test/pingpong_service.mojom.dart",
+  "lib/test/echo_service.mojom.dart",
+  "lib/sample/sample_service.mojom.dart",
+  "lib/sample/sample_interfaces.mojom.dart",
+  "lib/sample/sample_factory.mojom.dart",
+  "lib/regression_tests/regression_tests.mojom.dart",
+  "lib/math/math_calculator.mojom.dart",
+  "lib/imported/sample_import.mojom.dart",
+  "lib/imported/sample_import2.mojom.dart",
+]
+
+dart_pkg("_mojo_for_test_only") {
+  libs = [
+    "lib/async_helper.dart",
+    "lib/expect.dart",
+    "lib/validation_test_input_parser.dart",
+  ]
+  sources = [
+              "pubspec.yaml",
+              "lib/async_helper.dart",
+              "lib/expect.dart",
+              "lib/validation_test_input_parser.dart",
+            ] + bindings_sources
+
+  deps = [
+    "//mojo/services",
+    "//third_party/dart-pkg",
+  ]
+}

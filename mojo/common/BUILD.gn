@@ -1,0 +1,76 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+import("//testing/test.gni")
+
+source_set("common") {
+  sources = [
+    "binding_set.h",
+    "interface_ptr_set.h",
+    "strong_binding_set.h",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/public/cpp/bindings",
+  ]
+}
+
+source_set("tests") {
+  testonly = true
+
+  sources = [
+    "binding_set_unittest.cc",
+    "callback_binding_unittest.cc",
+    "interface_ptr_set_unittest.cc",
+    "strong_binding_set_unittest.cc",
+  ]
+
+  deps = [
+    ":common",
+    ":test_interfaces",
+    "//base",
+    "//mojo/message_pump",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/cpp/bindings:callback",
+    "//mojo/public/cpp/system",
+    "//testing/gtest",
+  ]
+}
+
+mojo_native_application("mojo_common_apptests") {
+  testonly = true
+
+  deps = [
+    ":tests",
+    "//mojo/application",
+    "//mojo/application:test_support",
+  ]
+}
+
+mojom("test_interfaces") {
+  testonly = true
+  sources = [
+    "test_interfaces.mojom",
+  ]
+}
+
+source_set("tracing_impl") {
+  sources = [
+    "trace_provider_impl.cc",
+    "trace_provider_impl.h",
+    "tracing_impl.cc",
+    "tracing_impl.h",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/public/cpp/application",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/interfaces/application",
+    "//mojo/services/tracing/interfaces",
+  ]
+}

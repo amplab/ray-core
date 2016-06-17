@@ -1,0 +1,48 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("../../mojo_sdk.gni")
+
+mojo_sdk_source_set("mojo_irt_header") {
+  sources = [
+    "mgl_irt.h",
+    "mojo_initial_handle.h",
+    "mojo_irt.h",
+  ]
+  mojo_sdk_deps = [
+    "mojo/public/c/gpu:MGL",
+    "mojo/public/c/gpu:MGL_onscreen",
+    "mojo/public/c/gpu:MGL_signal_sync_point",
+    "mojo/public/c/system",
+  ]
+}
+
+# Untrusted code
+if (is_nacl) {
+  # Thunk mapping the Mojo public API onto NaCl syscalls.
+  mojo_sdk_source_set("mojo") {
+    sources = [
+      "libmojo.cc",
+      "mgl_irt.cc",
+    ]
+    mojo_sdk_deps = [ "mojo/public/c/system" ]
+    deps = [
+      ":mojo_irt_header",
+    ]
+  }
+
+  mojo_sdk_source_set("system") {
+    sources = [
+      "mojo_main_thunk.cc",
+    ]
+    mojo_sdk_deps = [
+      "mojo/public/c/system",
+      "mojo/public/platform/nacl:mojo",
+      "mojo/public/platform/nacl:mojo_irt_header",
+    ]
+    deps = [
+      ":mojo_irt_header",
+    ]
+  }
+}

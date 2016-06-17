@@ -1,0 +1,36 @@
+# This is a configuration file for devtools (`mojo_run`, `mojo_test) running
+# within a Mojo checkout.
+
+# The content has to parse to a Python dictionary literal. Strings of the form
+# '@{ABC}' are aliases that will be substituted for their values before
+# evaluation:
+#  '@{BUILD_DIR}': path to the output directory
+
+{
+  # Each dev server will be configured as specified and mapped for the
+  # indicated host using --map-origin.
+  'dev_servers': [
+    {
+      'host': 'https://core.mojoapps.io/',
+      # At this port the server will appear to the shell. That means actually
+      # running on this port when running a Linux shell and being forwarded from
+      # this port when running on Android. Using a fixed port enables caching
+      # server responses between shell runs.
+      'port': 31839,
+      # First matching prefix will apply. Within the directiories specified for
+      # a prefix, first location that contains the requested path will apply.
+      'mappings': [
+        ('packages/', ['@{BUILD_DIR}/gen/dart-pkg/packages']),
+        ('', [
+          # We map two directiories, so that both exploded dart apps under
+          # checkout root and built apps in the build directory are available.
+          # For example, one could refer to the apps of either type using urls:
+          #  - https://core.mojoapps.io/spinning_cube.mojo
+          #  - https://core.mojoapps.io/examples/dart/device_info/main.dart
+          '@{BUILD_DIR}',
+          '.'
+        ]),
+      ],
+    },
+  ],
+}

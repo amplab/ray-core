@@ -1,0 +1,153 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+sysroot = "$root_out_dir/sysroot"
+sysroot_lib_dir = "${sysroot}/usr/lib"
+
+# See the discussion below about what these files are, and their
+# relationship to other C runtime files.
+source_set("crt") {
+  cflags = []
+
+  configs = []
+  configs += [ "//fusl:fusl_config" ]
+
+  cflags += [
+    "-DCRT",
+    "-fno-stack-protector",
+  ]
+
+  sources = [
+    "Scrt1.c",
+    "crt1.c",
+    "rcrt1.c",
+  ]
+
+  if (target_cpu == "x64") {
+    sources += [
+      "x86_64/crti.s",
+      "x86_64/crtn.s",
+    ]
+  } else {
+    sources += [
+      "crti.c",
+      "crtn.c",
+    ]
+  }
+}
+
+template("copy_objects") {
+  assert(defined(invoker.input_dir), "input_dir must be defined")
+  assert(defined(invoker.output_dir), "output_dir must be defined")
+  object_prefix = ""
+  if (defined(invoker.object_prefix)) {
+    object_prefix = invoker.object_prefix
+  }
+  foreach(file, invoker.sources) {
+    copy("copy_${file}") {
+      sources = [
+        rebase_path("${invoker.input_dir}/${object_prefix}${file}",
+                    "",
+                    target_out_dir),
+      ]
+      outputs = [
+        "${invoker.output_dir}/${file}",
+      ]
+      deps = [
+        ":crt",
+      ]
+    }
+  }
+  group(target_name) {
+    deps = [
+      ":crt",
+    ]
+    foreach(file, invoker.sources) {
+      deps += [ ":copy_$file" ]
+    }
+  }
+}
+
+copy_objects("copy_crt_generic_objects") {
+  sources = [
+    "Scrt1.o",
+    "crt1.o",
+    "rcrt1.o",
+  ]
+  object_prefix = "crt."
+  input_dir = "."
+  output_dir = "${sysroot_lib_dir}"
+}
+
+copy_objects("copy_crt_x64_objects") {
+  sources = [
+    "crti.o",
+    "crtn.o",
+  ]
+  object_prefix = "crt."
+  input_dir = "x86_64"
+  output_dir = "${sysroot_lib_dir}"
+}
+
+# The crtXXX.o files that are copied elsewhere in this file define
+# _start, and the machinery to implement calling into the init and
+# fini sections. These things are libc dependent and hence part of
+# libc.
+#
+# Unlike the other crtXXX.o files, crtbegin and crtend, are provided
+# by the toolchain, not the libc. So we steal them from the host.
+#
+# crtbegin and crtend know how to call constructors and destructors.
+#
+# libgcc provides runtime support, and so also comes from the
+# compiler. Things in here are stack unwinding, arithmetic not
+# supported on the target architecture, and so on.
+#
+# The best document I am aware of describing the different variants of
+# these files (and crtXXX.o above) is
+# https://dev.gentoo.org/~vapier/crt.txt
+#
+# S and _s mean shared or PIE
+# T and _eh mean static
+action("copy_crt_objects") {
+  script = "//fusl/tools/populate_crt.py"
+
+  clang = "//third_party/llvm-build/Release+Asserts/bin/clang"
+  target = "$sysroot/usr/lib"
+
+  files = [
+    "crtbegin.o",
+    "crtbeginS.o",
+    "crtbeginT.o",
+    "crtend.o",
+    "crtendS.o",
+
+    "libgcc.a",
+    "libgcc_eh.a",
+    "libgcc_s.so",
+  ]
+
+  args = [
+    rebase_path(clang),
+    rebase_path(target),
+  ]
+  args += files
+
+  outputs = [
+    "$target/crtbegin.o",
+    "$target/crtbeginS.o",
+    "$target/crtbeginT.o",
+    "$target/crtend.o",
+    "$target/crtendS.o",
+
+    "$target/libgcc.a",
+    "$target/libgcc_eh.a",
+    "$target/libgcc_s.so",
+  ]
+
+  deps = [
+    ":copy_crt_${current_cpu}_objects",
+    ":copy_crt_generic_objects",
+  ]
+}

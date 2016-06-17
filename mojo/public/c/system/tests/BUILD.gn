@@ -1,0 +1,75 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("../../../mojo_sdk.gni")
+
+mojo_sdk_source_set("tests") {
+  testonly = true
+
+  mojo_sdk_visibility =
+      [ "mojo/public/cpp/system/tests:mojo_public_system_unittests" ]
+
+  cflags_c = [ "-Wundef" ]
+
+  sources = [
+    "buffer_unittest.cc",
+    "compile_unittest.cc",
+    "data_pipe_unittest.cc",
+    "handle_unittest.cc",
+    "macros_unittest.cc",
+    "message_pipe_unittest.cc",
+    "result_unittest.cc",
+    "time_unittest.cc",
+    "wait_unittest.cc",
+  ]
+
+  deps = [
+    ":pure_tests",
+    "//testing/gtest",
+  ]
+
+  mojo_sdk_deps = [
+    "mojo/public/c/environment",
+    "mojo/public/c/system",
+  ]
+}
+
+# This source set contains "pure" tests that only depend on the public SDK (and
+# the standard library), and in particular not on gtest (whose headers don't
+# compile with "-Wundef").
+mojo_sdk_source_set("pure_tests") {
+  testonly = true
+
+  visibility = [ ":tests" ]
+
+  cflags = [ "-Wundef" ]
+
+  sources = [
+    "compile_unittest_pure_c.c",
+    "compile_unittest_pure_cpp.cc",
+  ]
+
+  mojo_sdk_deps = [
+    "mojo/public/c/environment",
+    "mojo/public/c/system",
+  ]
+}
+
+mojo_sdk_source_set("perftests") {
+  testonly = true
+
+  sources = [
+    "core_perftest.cc",
+  ]
+
+  deps = [
+    "//testing/gtest",
+  ]
+
+  mojo_sdk_deps = [
+    "mojo/public/c/environment",
+    "mojo/public/cpp/system",
+    "mojo/public/cpp/test_support",
+  ]
+}

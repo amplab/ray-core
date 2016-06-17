@@ -1,0 +1,19 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/android/rules.gni")
+
+mojo_android_java_application("android_sharing") {
+  sources = [
+    "src/org/chromium/services/sharing/SharingApp.java",
+  ]
+
+  mojo_main = "org.chromium.services.sharing.SharingApp"
+
+  deps = [
+    "//mojo/public/interfaces/application:application_java",
+    "//mojo/public/java:application",
+    "//mojo/services/sharing/interfaces:interfaces_java",
+  ]
+}

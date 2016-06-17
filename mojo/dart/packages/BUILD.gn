@@ -1,0 +1,14 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+group("packages") {
+  deps = [
+    "//mojo/dart/packages/_mojo_for_test_only",
+    "//mojo/dart/packages/mojo",
+    "//mojo/dart/packages/mojo_apptest",
+    "//mojo/dart/packages/mojo_sdk",
+    "//mojo/dart/packages/mojo_services",
+    "//mojo/dart/packages/mojom",
+  ]
+}

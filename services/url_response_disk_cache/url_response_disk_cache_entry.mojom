@@ -1,0 +1,23 @@
+// Copyright 2015 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// These mojom structs are declared only to get generated serialization code
+// (ie. they are not used for ipc).
+module mojo;
+
+import "mojo/public/interfaces/network/url_response.mojom";
+
+struct CacheKey {
+  string request_origin;
+  string url;
+  int64 timestamp;
+};
+
+// One entry in the service cache.
+struct CacheEntry {
+  URLResponse response;
+  string entry_directory;
+  string response_body_path;
+  int64 last_invalidation;
+};

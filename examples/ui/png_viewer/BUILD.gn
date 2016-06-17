@@ -1,0 +1,32 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+
+mojo_native_application("png_viewer") {
+  sources = [
+    "png_viewer.cc",
+  ]
+
+  deps = [
+    "//mojo/application",
+    "//mojo/data_pipe_utils",
+    "//mojo/environment:chromium",
+    "//mojo/gpu",
+    "//mojo/public/c/gpu",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/cpp/utility",
+    "//mojo/services/content_handler/interfaces",
+    "//mojo/services/geometry/interfaces",
+    "//mojo/services/gfx/composition/interfaces",
+    "//mojo/services/network/interfaces",
+    "//mojo/services/ui/views/interfaces",
+    "//mojo/skia",
+    "//mojo/ui",
+    "//mojo/ui:content",
+    "//mojo/ui:ganesh",
+    "//mojo/ui:gl",
+    "//ui/gfx",
+  ]
+}

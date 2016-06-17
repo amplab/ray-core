@@ -1,0 +1,22 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+
+mojo_native_application("http_handler") {
+  sources = [
+    "http_handler.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/application",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/cpp/system",
+    "//mojo/services/http_server/cpp",
+    "//mojo/services/http_server/interfaces",
+    "//mojo/services/network/interfaces",
+    "//services/http_server",
+  ]
+}

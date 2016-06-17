@@ -1,0 +1,36 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+
+group("startup") {
+  testonly = true
+
+  deps = [
+    ":app",
+    ":noop",
+  ]
+}
+
+mojo_native_application("app") {
+  output_name = "mojo_benchmark_startup"
+  testonly = true
+
+  sources = [
+    "startup.cc",
+  ]
+}
+
+executable("noop") {
+  output_name = "mojo_benchmark_startup_noop"
+  testonly = true
+
+  sources = [
+    "noop.cc",
+  ]
+
+  deps = [
+    "//build/config/sanitizers:deps",
+  ]
+}

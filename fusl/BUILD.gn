@@ -1,0 +1,444 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Define the sysroot directory.
+sysroot = "$root_out_dir/sysroot"
+sysroot_lib_dir = "${sysroot}/usr/lib"
+sysroot_include_dir = "${sysroot}/usr/include"
+sysroot_include_bits_dir = "${sysroot}/usr/include/bits"
+
+config("fusl_config") {
+  cflags = [
+    # Flags from musl
+    "-std=c99",
+    "-ffreestanding",
+    "-nostdinc",
+
+    "-D_XOPEN_SOURCE=700",
+
+    "-Wa,--noexecstack",
+
+    "-fomit-frame-pointer",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+    "-ffunction-sections",
+    "-fdata-sections",
+    "-Werror=implicit-function-declaration",
+    "-Werror=implicit-int",
+    "-Werror=pointer-sign",
+    "-Werror=pointer-arith",
+  ]
+
+  include_dirs = []
+
+  # Arch specific includes, these need to come before the general includes.
+  if (current_cpu == "x64") {
+    include_dirs += [ "arch/x86_64" ]
+  }
+
+  # General includes, these need to come after the arch specific includes.
+  # src/internal must come before include.
+  include_dirs += [
+    "arch/generic",
+    "src/internal",
+    "include",
+  ]
+}
+
+config("fusl_no_stack_protector_config") {
+  cflags = [ "-fno-stack-protector" ]
+}
+
+static_library("libc") {
+  configs = []
+  configs += [ ":fusl_config" ]
+
+  complete_static_lib = true
+
+  deps = [
+    "ldso",
+    "src/aio",
+    "src/complex",
+    "src/conf",
+    "src/crypt",
+    "src/ctype",
+    "src/dirent",
+    "src/env",
+    "src/errno",
+    "src/exit",
+    "src/fcntl",
+    "src/fenv",
+    "src/internal",
+    "src/ipc",
+    "src/ldso",
+    "src/legacy",
+    "src/linux",
+    "src/locale",
+    "src/malloc",
+    "src/math",
+    "src/misc",
+    "src/mman",
+    "src/mq",
+    "src/multibyte",
+    "src/network",
+    "src/passwd",
+    "src/prng",
+    "src/process",
+    "src/regex",
+    "src/sched",
+    "src/search",
+    "src/select",
+    "src/setjmp",
+    "src/signal",
+    "src/stat",
+    "src/stdio",
+    "src/stdlib",
+    "src/string",
+    "src/temp",
+    "src/termios",
+    "src/thread",
+    "src/time",
+    "src/unistd",
+  ]
+}
+
+# For simplicity, musl places all its symbols in libc. To support
+# linking against e.g. libm, either implicitly or with an explicit -lm
+# flag, we build empty libraries.
+static_library("libm") {
+  complete_static_lib = true
+}
+
+copy("copy_include") {
+  sources = [
+    "include",
+  ]
+  outputs = [
+    "${sysroot_include_dir}",
+  ]
+}
+
+copy("copy_arch_include_bits") {
+  deps = [
+    ":copy_include",
+  ]
+  if (current_cpu == "x64") {
+    sources = [
+      "arch/generic/bits/errno.h",
+      "arch/generic/bits/poll.h",
+      "arch/generic/bits/resource.h",
+      "arch/generic/bits/sem.h",
+      "arch/generic/bits/statfs.h",
+      "arch/generic/bits/stdarg.h",
+      "arch/generic/bits/termios.h",
+      "arch/x86_64/bits/alltypes.h",
+      "arch/x86_64/bits/endian.h",
+      "arch/x86_64/bits/fcntl.h",
+      "arch/x86_64/bits/fenv.h",
+      "arch/x86_64/bits/float.h",
+      "arch/x86_64/bits/io.h",
+      "arch/x86_64/bits/ioctl.h",
+      "arch/x86_64/bits/ipc.h",
+      "arch/x86_64/bits/limits.h",
+      "arch/x86_64/bits/mman.h",
+      "arch/x86_64/bits/msg.h",
+      "arch/x86_64/bits/posix.h",
+      "arch/x86_64/bits/reg.h",
+      "arch/x86_64/bits/setjmp.h",
+      "arch/x86_64/bits/shm.h",
+      "arch/x86_64/bits/signal.h",
+      "arch/x86_64/bits/socket.h",
+      "arch/x86_64/bits/stat.h",
+      "arch/x86_64/bits/stdint.h",
+      "arch/x86_64/bits/syscall.h",
+      "arch/x86_64/bits/user.h",
+    ]
+  }
+  outputs = [
+    "${sysroot_include_bits_dir}/{{source_name_part}}.h",
+  ]
+}
+
+copy("copy_libs") {
+  deps = [
+    ":libc",
+    ":libm",
+  ]
+  sources = [
+    "${target_out_dir}/libc.a",
+    "${target_out_dir}/libm.a",
+  ]
+  outputs = [
+    "${sysroot_lib_dir}/{{source_name_part}}.a",
+  ]
+}
+
+group("copy_sysroot") {
+  deps = [
+    ":copy_arch_include_bits",
+    ":copy_include",
+    ":copy_libs",
+    "crt:copy_crt_objects",
+  ]
+}
+
+copy("copy_libcxx") {
+  sources = [
+    "${target_out_dir}/../third_party/libcxx/libcxx.a",
+  ]
+  outputs = [
+    "${sysroot_lib_dir}/libc++.a",
+  ]
+  deps = [
+    "//third_party/libcxx:libcxx",
+  ]
+}
+
+action("copy_libcxx_headers") {
+  script = "tools/copy_libcxx_headers.py"
+
+  deps = [
+    ":copy_sysroot",
+  ]
+
+  source_dir = "//third_party/libcxx/libcxx/include"
+
+  # Annoyingly, this has to be ".../c++/v1" for clang to automatically
+  # add it to the includes.
+  target_dir = "${sysroot_include_dir}/c++/v1"
+
+  args = [
+    rebase_path(source_dir),
+    rebase_path(target_dir),
+  ]
+
+  outputs = [
+    "${target_dir}/__bit_reference",
+    "${target_dir}/__config",
+    "${target_dir}/__config_site.in",
+    "${target_dir}/__debug",
+    "${target_dir}/__functional_03",
+    "${target_dir}/__functional_base",
+    "${target_dir}/__functional_base_03",
+    "${target_dir}/__hash_table",
+    "${target_dir}/__locale",
+    "${target_dir}/__mutex_base",
+    "${target_dir}/__nullptr",
+    "${target_dir}/__refstring",
+    "${target_dir}/__split_buffer",
+    "${target_dir}/__sso_allocator",
+    "${target_dir}/__std_stream",
+    "${target_dir}/__tree",
+    "${target_dir}/__tuple",
+    "${target_dir}/__undef___deallocate",
+    "${target_dir}/__undef_min_max",
+    "${target_dir}/algorithm",
+    "${target_dir}/array",
+    "${target_dir}/atomic",
+    "${target_dir}/bitset",
+    "${target_dir}/cassert",
+    "${target_dir}/ccomplex",
+    "${target_dir}/cctype",
+    "${target_dir}/cerrno",
+    "${target_dir}/cfenv",
+    "${target_dir}/cfloat",
+    "${target_dir}/chrono",
+    "${target_dir}/cinttypes",
+    "${target_dir}/ciso646",
+    "${target_dir}/climits",
+    "${target_dir}/clocale",
+    "${target_dir}/cmath",
+    "${target_dir}/codecvt",
+    "${target_dir}/complex",
+    "${target_dir}/complex.h",
+    "${target_dir}/condition_variable",
+    "${target_dir}/csetjmp",
+    "${target_dir}/csignal",
+    "${target_dir}/cstdarg",
+    "${target_dir}/cstdbool",
+    "${target_dir}/cstddef",
+    "${target_dir}/cstdint",
+    "${target_dir}/cstdio",
+    "${target_dir}/cstdlib",
+    "${target_dir}/cstring",
+    "${target_dir}/ctgmath",
+    "${target_dir}/ctime",
+    "${target_dir}/ctype.h",
+    "${target_dir}/cwchar",
+    "${target_dir}/cwctype",
+    "${target_dir}/deque",
+    "${target_dir}/errno.h",
+    "${target_dir}/exception",
+    "${target_dir}/experimental/__config",
+    "${target_dir}/experimental/algorithm",
+    "${target_dir}/experimental/any",
+    "${target_dir}/experimental/chrono",
+    "${target_dir}/experimental/dynarray",
+    "${target_dir}/experimental/functional",
+    "${target_dir}/experimental/optional",
+    "${target_dir}/experimental/ratio",
+    "${target_dir}/experimental/string_view",
+    "${target_dir}/experimental/system_error",
+    "${target_dir}/experimental/tuple",
+    "${target_dir}/experimental/type_traits",
+    "${target_dir}/experimental/utility",
+    "${target_dir}/ext/__hash",
+    "${target_dir}/ext/hash_map",
+    "${target_dir}/ext/hash_set",
+    "${target_dir}/float.h",
+    "${target_dir}/forward_list",
+    "${target_dir}/fstream",
+    "${target_dir}/functional",
+    "${target_dir}/future",
+    "${target_dir}/initializer_list",
+    "${target_dir}/inttypes.h",
+    "${target_dir}/iomanip",
+    "${target_dir}/ios",
+    "${target_dir}/iosfwd",
+    "${target_dir}/iostream",
+    "${target_dir}/istream",
+    "${target_dir}/iterator",
+    "${target_dir}/limits",
+    "${target_dir}/list",
+    "${target_dir}/locale",
+    "${target_dir}/map",
+    "${target_dir}/math.h",
+    "${target_dir}/memory",
+    "${target_dir}/module.modulemap",
+    "${target_dir}/mutex",
+    "${target_dir}/new",
+    "${target_dir}/numeric",
+    "${target_dir}/ostream",
+    "${target_dir}/queue",
+    "${target_dir}/random",
+    "${target_dir}/ratio",
+    "${target_dir}/regex",
+    "${target_dir}/scoped_allocator",
+    "${target_dir}/set",
+    "${target_dir}/setjmp.h",
+    "${target_dir}/shared_mutex",
+    "${target_dir}/sstream",
+    "${target_dir}/stack",
+    "${target_dir}/stddef.h",
+    "${target_dir}/stdexcept",
+    "${target_dir}/stdio.h",
+    "${target_dir}/stdlib.h",
+    "${target_dir}/streambuf",
+    "${target_dir}/string",
+    "${target_dir}/strstream",
+    "${target_dir}/support/android/locale_bionic.h",
+    "${target_dir}/support/ibm/limits.h",
+    "${target_dir}/support/ibm/support.h",
+    "${target_dir}/support/ibm/xlocale.h",
+    "${target_dir}/support/musl/xlocale.h",
+    "${target_dir}/support/newlib/xlocale.h",
+    "${target_dir}/support/solaris/floatingpoint.h",
+    "${target_dir}/support/solaris/wchar.h",
+    "${target_dir}/support/solaris/xlocale.h",
+    "${target_dir}/support/win32/limits_win32.h",
+    "${target_dir}/support/win32/locale_win32.h",
+    "${target_dir}/support/win32/math_win32.h",
+    "${target_dir}/support/win32/support.h",
+    "${target_dir}/support/xlocale/xlocale.h",
+    "${target_dir}/system_error",
+    "${target_dir}/tgmath.h",
+    "${target_dir}/thread",
+    "${target_dir}/tuple",
+    "${target_dir}/type_traits",
+    "${target_dir}/typeindex",
+    "${target_dir}/typeinfo",
+    "${target_dir}/unordered_map",
+    "${target_dir}/unordered_set",
+    "${target_dir}/utility",
+    "${target_dir}/valarray",
+    "${target_dir}/vector",
+    "${target_dir}/wchar.h",
+    "${target_dir}/wctype.h",
+  ]
+}
+
+config("fusl_sysroot_config") {
+  rebased_sysroot = rebase_path(sysroot)
+
+  cflags = [
+    "--sysroot=$rebased_sysroot",
+    "-fPIC",
+    "-static",
+  ]
+
+  cflags_c = [ "-std=c11" ]
+
+  cflags_cc = [
+    "-std=c++11",
+
+    # Make everyone using our libc++ headers use musl paths rather
+    # than glibc ones.
+    "-D_LIBCPP_HAS_MUSL_LIBC",
+
+    # This is necessary for clang to get the header search paths right.
+    "-stdlib=libc++",
+  ]
+
+  ldflags = [
+    "--sysroot=$rebased_sysroot",
+    "-static",
+    "-stdlib=libc++",
+  ]
+}
+
+config("fusl_sysroot_config_c") {
+  ldflags = [
+    # Using clang++ as the linker driver is necessary for libc++
+    # resolution to work.
+    "-nodefaultlibs",
+    "-lc",
+  ]
+}
+
+executable("empty_main") {
+  configs = []
+  configs += [
+    ":fusl_sysroot_config",
+    ":fusl_sysroot_config_c",
+  ]
+
+  sources = [
+    "test/empty_main.c",
+  ]
+
+  deps = [
+    ":copy_sysroot",
+  ]
+}
+
+executable("vector") {
+  configs = []
+  configs += [ ":fusl_sysroot_config" ]
+
+  sources = [
+    "test/vector.cc",
+  ]
+
+  deps = [
+    ":copy_libcxx",
+    ":copy_libcxx_headers",
+  ]
+}
+
+group("fusl_pre_toolchain") {
+  deps = [
+    ":copy_sysroot",
+    ":empty_main",
+    ":libc",
+    ":vector",
+    "crt",
+    "//third_party/libcxx:libcxx",
+  ]
+}
+
+group("fusl") {
+  deps = [
+    ":fusl_pre_toolchain(//build/toolchain/fusl:fusl_$current_cpu)",
+  ]
+}

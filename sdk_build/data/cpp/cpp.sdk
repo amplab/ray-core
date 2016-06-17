@@ -1,0 +1,98 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This file contains steps for "building" a C/C++ SDK. It is processed by
+# //mojo/sdk_build/build_sdk.py.
+# TODO(vtl): This isn't done yet. (Or is it?)
+
+import re
+
+EXCLUDE_FILES=[".*", "*.gn", "*.gni", "PRESUBMIT.py", "*_win.*"]
+EXCLUDE_PATHS=["*/tests/*"]
+
+WriteFile("MOJO_SDK_VERSION", "%s\n" % GitGetRevision())
+
+CopyDir("mojo/public",
+        "mojo/public",
+        recursive=False,
+        exclude_file_patterns=EXCLUDE_FILES)
+
+CopyDir("mojo/public/c",
+        "mojo/public/c",
+        recursive=True,
+        exclude_file_patterns=EXCLUDE_FILES,
+        exclude_path_patterns=EXCLUDE_PATHS)
+CopyDir("mojo/public/cpp",
+        "mojo/public/cpp",
+        recursive=True,
+        exclude_file_patterns=EXCLUDE_FILES+["application_test_*.*"],
+        exclude_path_patterns=EXCLUDE_PATHS+["mojo/public/cpp/test_support/*"])
+CopyDir("mojo/public/interfaces",
+        "mojo/public/interfaces",
+        recursive=True,
+        exclude_file_patterns=EXCLUDE_FILES,
+        exclude_path_patterns=EXCLUDE_PATHS)
+
+# For native Mojo apps, we need thunks.
+CopyDir("mojo/public/platform/native",
+        "mojo/public/platform/native",
+        recursive=True,
+        exclude_file_patterns=EXCLUDE_FILES,
+        exclude_path_patterns=EXCLUDE_PATHS)
+
+# For simplicity, copy all of the bindings generators, even though we really
+# only need/want C++.
+CopyDir("mojo/public/tools/bindings",
+        "mojo/public/tools/bindings",
+        recursive=True,
+        exclude_file_patterns=EXCLUDE_FILES,
+        exclude_path_patterns=EXCLUDE_PATHS+["*/mojom_tests/*"])
+# The generators need jinja2, which needs markupsafe. Sigh.
+CopyDir("mojo/public/third_party/jinja2",
+        "mojo/public/third_party/jinja2",
+        recursive=True)
+CopyDir("mojo/public/third_party/markupsafe",
+        "mojo/public/third_party/markupsafe",
+        recursive=True)
+# We currently need some stuff to glue the mojom tool to the generators.
+CopyDir("mojo/public/python/dummy_mojo_system",
+        "mojo/public/python/dummy_mojo_system",
+        recursive=True)
+CopyDir("mojo/public/python/mojo_bindings",
+        "mojo/public/python/mojo_bindings",
+        recursive=True)
+
+# Scripts to download binaries.
+CopyFiles(["sdk_build/data/common/download_file_from_google_storage.py",
+           "sdk_build/data/common/download_mojom_tool.sh",
+           "sdk_build/data/cpp/download_clang.sh",
+           "sdk_build/data/cpp/setup.sh"],
+          "mojo_sdk_setup")
+
+# Figure out the version of clang, and include that. (This is a little janky,
+# but it's how we roll.)
+clang_update_script = ReadFile("tools/clang/scripts/update.sh")
+clang_revision = re.search(r"^CLANG_REVISION=(\d+)$",
+                           clang_update_script,
+                           re.MULTILINE).group(1)
+clang_sub_revision = re.search(r"^CLANG_SUB_REVISION=(\d+)$",
+                               clang_update_script,
+                               re.MULTILINE).group(1)
+WriteFile("mojo_sdk_setup/data/CLANG_VERSION",
+          "%s-%s\n" % (clang_revision, clang_sub_revision))
+
+# Seed an example.
+CopyDir("examples/hello_mojo",
+        "examples/hello_mojo",
+        recursive=True,
+        exclude_file_patterns=EXCLUDE_FILES)
+
+# Put in a simple example Makefile (in the root directory).
+CopyFiles("sdk_build/data/cpp/Makefile", "")
+
+# Bring in the license and authors files.
+CopyFiles(["LICENSE", "AUTHORS"], "")
+
+# Put in the README.md for the SDK.
+WriteFile("README.md", ReadFile("sdk_build/data/cpp/README-sdk.md"))

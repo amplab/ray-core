@@ -1,0 +1,30 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//fusl/fusl.gni")
+
+fusl_source_set("stat") {
+  sources = [
+    "__xstat.c",
+    "chmod.c",
+    "fchmod.c",
+    "fchmodat.c",
+    "fstat.c",
+    "fstatat.c",
+    "futimens.c",
+    "futimesat.c",
+    "lchmod.c",
+    "lstat.c",
+    "mkdir.c",
+    "mkdirat.c",
+    "mkfifo.c",
+    "mkfifoat.c",
+    "mknod.c",
+    "mknodat.c",
+    "stat.c",
+    "statvfs.c",
+    "umask.c",
+    "utimensat.c",
+  ]
+}

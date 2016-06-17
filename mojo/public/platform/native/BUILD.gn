@@ -1,0 +1,143 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("../../mojo_sdk.gni")
+import("../../mojo_application.gni")
+
+mojo_sdk_source_set("system") {
+  sources = [
+    "system_thunks.c",
+    "system_thunks.h",
+  ]
+  mojo_sdk_deps = [ "mojo/public/c/system" ]
+
+  # The GYP target analogous to this one builds this code into a
+  # static library.  When building for Android, both the GYP and GN
+  # builds add --exclude-libs=ALL globally, which means that all
+  # symbols in static libraries are excluded from export.  That's a
+  # problem, as code outside this target needs to be able to call
+  # MojoSetSystemThunks(). Therefore, the GYP target needs to specifiy
+  # that all dependent targets remove that link flag. Since GN uses a
+  # source_set here, this flag change is not needed.
+}
+
+mojo_sdk_source_set("gles2") {
+  sources = [
+    "gles2_impl_chromium_bind_uniform_location_thunks.c",
+    "gles2_impl_chromium_bind_uniform_location_thunks.h",
+    "gles2_impl_chromium_map_sub_thunks.c",
+    "gles2_impl_chromium_map_sub_thunks.h",
+    "gles2_impl_chromium_miscellaneous_thunks.c",
+    "gles2_impl_chromium_miscellaneous_thunks.h",
+    "gles2_impl_chromium_resize_thunks.c",
+    "gles2_impl_chromium_resize_thunks.h",
+    "gles2_impl_chromium_sync_point_thunks.c",
+    "gles2_impl_chromium_sync_point_thunks.h",
+    "gles2_impl_chromium_texture_mailbox_thunks.c",
+    "gles2_impl_chromium_texture_mailbox_thunks.h",
+    "gles2_impl_ext_debug_marker_thunks.c",
+    "gles2_impl_ext_debug_marker_thunks.h",
+    "gles2_impl_ext_discard_framebuffer_thunks.c",
+    "gles2_impl_ext_discard_framebuffer_thunks.h",
+    "gles2_impl_ext_multisampled_render_to_texture_thunks.c",
+    "gles2_impl_ext_multisampled_render_to_texture_thunks.h",
+    "gles2_impl_ext_occlusion_query_thunks.c",
+    "gles2_impl_ext_occlusion_query_thunks.h",
+    "gles2_impl_ext_texture_storage_thunks.c",
+    "gles2_impl_ext_texture_storage_thunks.h",
+    "gles2_impl_khr_blend_equation_advanced_thunks.c",
+    "gles2_impl_khr_blend_equation_advanced_thunks.h",
+    "gles2_impl_oes_vertex_array_object_thunks.c",
+    "gles2_impl_oes_vertex_array_object_thunks.h",
+    "gles2_impl_thunks.c",
+    "gles2_impl_thunks.h",
+  ]
+
+  defines = [ "MOJO_GLES2_IMPLEMENTATION" ]
+
+  configs = [ "../../c/gpu:gpu_configs" ]
+
+  mojo_sdk_deps = [
+    "mojo/public/c/gpu:GLES2",
+    "mojo/public/c/environment",
+    "mojo/public/c/system",
+  ]
+}
+
+mojo_sdk_source_set("gpu_thunks") {
+  sources = []
+}
+
+mojo_sdk_source_set("mgl_thunks") {
+  sources = [
+    "mgl_echo_thunks.c",
+    "mgl_echo_thunks.h",
+    "mgl_signal_sync_point_thunks.c",
+    "mgl_signal_sync_point_thunks.h",
+    "mgl_thunks.c",
+    "mgl_thunks.h",
+  ]
+
+  mojo_sdk_deps = [
+    "mojo/public/c/gpu:MGL",
+    "mojo/public/c/gpu:MGL_signal_sync_point",
+    "mojo/public/c/gpu:MGL_echo",
+  ]
+}
+
+mojo_sdk_source_set("mgl_onscreen_thunks") {
+  sources = [
+    "mgl_onscreen_thunks.c",
+    "mgl_onscreen_thunks.h",
+  ]
+
+  mojo_sdk_deps = [ "mojo/public/c/gpu:MGL_onscreen" ]
+}
+
+mojo_sdk_source_set("platform_handle") {
+  sources = [
+    "platform_handle_private_thunks.c",
+    "platform_handle_private_thunks.h",
+  ]
+
+  mojo_sdk_deps = [
+    "mojo/public/platform/native:platform_handle_api",
+    "mojo/public/c/system",
+  ]
+}
+
+# Only targets that are calling the thunks should depend upon this.
+mojo_sdk_source_set("platform_handle_api") {
+  sources = [
+    "platform_handle_private.h",
+  ]
+  mojo_sdk_deps = [ "mojo/public/c/system:system" ]
+}
+
+mojo_native_application("platform_handle_private_apptest") {
+  output_name = "platform_handle_private_apptests"
+
+  testonly = true
+
+  sources = [
+    "platform_handle_private_apptest.cc",
+  ]
+
+  deps = [
+    ":platform_handle",
+    ":platform_handle_api",
+    "../../cpp/application:standalone",
+    "../../cpp/application:test_support_standalone",
+    "../../cpp/environment",
+    "../../cpp/system",
+  ]
+}
+
+group("tests") {
+  testonly = true
+
+  deps = [
+    ":platform_handle_private_apptest",
+  ]
+}

@@ -1,0 +1,49 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/tools/bindings/mojom.gni")
+
+if (is_android) {
+  import("//mojo/android/rules.gni")
+
+  mojo_android_java_application("notifications") {
+    sources = [
+      "src/org/chromium/mojo/notifications/NotificationBuilder.java",
+      "src/org/chromium/mojo/notifications/NotificationImpl.java",
+      "src/org/chromium/mojo/notifications/NotificationServiceImpl.java",
+      "src/org/chromium/mojo/notifications/NotificationsApp.java",
+    ]
+
+    mojo_main = "org.chromium.mojo.notifications.NotificationsApp"
+
+    deps = [
+      "//mojo/public/interfaces/application:application_java",
+      "//mojo/public/java:application",
+      "//mojo/services/notifications/interfaces:interfaces_java",
+      "//services/intent_receiver:bindings_java",
+    ]
+  }
+
+  mojo_native_application("apptests") {
+    output_name = "notification_apptests"
+
+    testonly = true
+
+    sources = [
+      "apptests/notifications_apptest.cc",
+    ]
+
+    deps = [
+      "//base",
+      "//mojo/application",
+      "//mojo/application:test_support",
+      "//mojo/common:common",
+      "//mojo/public/cpp/bindings:callback",
+      "//mojo/public/cpp/environment",
+      "//mojo/public/cpp/system:system",
+      "//mojo/services/notifications/interfaces:interfaces_cpp_sources",
+      "//shell/test:bindings",
+    ]
+  }
+}

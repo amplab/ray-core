@@ -1,0 +1,31 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//fusl/fusl.gni")
+
+fusl_source_set("stdlib") {
+  sources = [
+    "abs.c",
+    "atof.c",
+    "atoi.c",
+    "atol.c",
+    "atoll.c",
+    "bsearch.c",
+    "div.c",
+    "ecvt.c",
+    "fcvt.c",
+    "gcvt.c",
+    "imaxabs.c",
+    "imaxdiv.c",
+    "labs.c",
+    "ldiv.c",
+    "llabs.c",
+    "lldiv.c",
+    "qsort.c",
+    "strtod.c",
+    "strtol.c",
+    "wcstod.c",
+    "wcstol.c",
+  ]
+}

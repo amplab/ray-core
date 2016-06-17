@@ -1,0 +1,102 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/tools/bindings/mojom.gni")
+import("//testing/test.gni")
+
+group("embedder_tester") {
+  testonly = true
+  deps = [
+    ":dart_finalizer_unittests",
+    ":dart_to_cpp_unittests",
+    ":dart_unittests",
+    ":dart_validation_unittests",
+  ]
+}
+
+source_set("dart_controller_for_test") {
+  testonly = true
+  sources = [
+    "$root_gen_dir/dart_snapshot.cc",
+  ]
+  deps = [
+    "//mojo/dart/embedder:dart_controller_no_snapshot",
+    "//mojo/dart/embedder:generate_snapshot_file",
+  ]
+}
+
+group("dart_test_deps") {
+  testonly = true
+  public_deps = [
+    ":dart_controller_for_test",
+    "//base",
+    "//mojo/dart/embedder:dart_controller_no_snapshot",
+    "//mojo/dart/packages",
+    "//mojo/edk/test:run_all_unittests",
+    "//mojo/environment:chromium",
+    "//mojo/public/cpp/environment",
+    "//mojo/public/cpp/system",
+    "//mojo/public/cpp/utility",
+    "//testing/gtest",
+    "//third_party/dart-pkg",
+  ]
+}
+
+source_set("dart_test") {
+  testonly = true
+  sources = [
+    "dart_test.cc",
+    "dart_test.h",
+  ]
+  deps = [
+    ":dart_test_deps",
+  ]
+}
+
+mojom("dart_to_cpp_bindings") {
+  sources = [
+    "dart_to_cpp.mojom",
+  ]
+}
+
+test("dart_to_cpp_unittests") {
+  sources = [
+    "dart_to_cpp_tests.cc",
+  ]
+  deps = [
+    ":dart_test",
+    ":dart_test_deps",
+    ":dart_to_cpp_bindings",
+  ]
+}
+
+test("dart_finalizer_unittests") {
+  sources = [
+    "dart_finalizer_test.cc",
+  ]
+  deps = [
+    ":dart_test",
+    ":dart_test_deps",
+  ]
+}
+
+test("dart_unittests") {
+  sources = [
+    "run_dart_tests.cc",
+  ]
+  deps = [
+    ":dart_test",
+    ":dart_test_deps",
+  ]
+}
+
+test("dart_validation_unittests") {
+  sources = [
+    "validation_unittest.cc",
+  ]
+  deps = [
+    ":dart_test",
+    ":dart_test_deps",
+  ]
+}

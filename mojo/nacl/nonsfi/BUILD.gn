@@ -1,0 +1,161 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Trusted code
+if (!is_nacl) {
+  # A simple shell for running untrusted binaries that talk to the Mojo
+  # embedder. (No services.)
+  if (current_cpu == "x86" || current_cpu == "arm") {
+    # Non-SFI NaCl currently supports x86-32 and ARMv7, but not anything 64-bit.
+    # Additionally, PNaCl pexes assume 32-bit pointers.
+    executable("monacl_shell_nonsfi") {
+      testonly = true
+      sources = [
+        "monacl_shell_nonsfi.cc",
+      ]
+      deps = [
+        ":irt_mojo",
+        "//mojo/edk/base_edk",
+        "//mojo/edk/system",
+        "//mojo/public/cpp/environment:standalone",
+        "//native_client/src/nonsfi/loader:elf_loader",
+      ]
+    }
+  }
+}
+
+group("monacl_shell_x86") {
+  testonly = true
+  deps = []
+  if ((target_cpu == "x64" || target_cpu == "x86") && is_linux) {
+    # Even when Mojo is built for x86-64 by default, we want to use x86-32
+    # for running programs under Non-SFI NaCl.
+    # The toolchain is hardcoded as 32-bit clang here -- although it must
+    # be 32 bit (for nonsfi), it assumes clang. Ideally, the toolchain would
+    # be defined as the 32 bit variant of whatever is being used (be it clang,
+    # gcc, or something else).
+    deps += [ ":monacl_shell_nonsfi(//build/toolchain/linux:clang_x86)" ]
+  }
+}
+
+static_library("irt_mojo") {
+  sources = [
+    "file_util.cc",
+    "file_util.h",
+    "irt_mojo_nonsfi.cc",
+    "irt_mojo_nonsfi.h",
+    "irt_pnacl_translator_compile.cc",
+    "irt_pnacl_translator_link.cc",
+    "irt_resource_open.cc",
+    "nexe_launcher_nonsfi.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/public/c/gpu:MGL",
+    "//mojo/public/c/gpu:MGL_onscreen",
+    "//mojo/public/c/gpu:MGL_signal_sync_point",
+    "//mojo/public/c/system",
+    "//mojo/public/cpp/utility",
+    "//mojo/public/platform/nacl:mojo_irt_header",
+    "//mojo/public/platform/native:mgl_thunks",
+    "//mojo/public/platform/native:mgl_onscreen_thunks",
+    "//mojo/services/files/interfaces",
+    "//native_client/src/nonsfi/irt:irt_interfaces",
+    "//services/nacl/nonsfi:pnacl_translator_irt",
+  ]
+}
+
+group("mojo_nacl") {
+  deps = [
+    "//services/nacl/nonsfi:content_handler",
+  ]
+}
+
+group("mojo_pnacl_tests") {
+  testonly = true
+  public_deps = [
+    "//mojo/nacl:mojo_nacl_tests_untrusted(//build/toolchain/nacl:newlib_pnacl)",
+    "//mojo/nacl:monacl_test(//build/toolchain/nacl:newlib_pnacl)",
+  ]
+}
+
+action("translate_mojo_pnacl_tests_to_native") {
+  testonly = true
+
+  # Leaving default as linux for OSes which are similar to linux, but do
+  # not self-identify as linux through host_os.
+  nacl_toolchain_host_os = "linux"
+  if (host_os == "mac") {
+    nacl_toolchain_host_os = "mac"
+  }
+  script = rebase_path(
+          "//native_client/toolchain/${nacl_toolchain_host_os}_x86/pnacl_newlib/bin/pydir/loader.py")
+  input = rebase_path("${root_build_dir}/newlib_pnacl/monacl_test.pexe")
+  inputs = [
+    input,
+  ]
+  output = "monacl_test_nonsfi.nexe"
+  outputs = [
+    "$root_out_dir/${output}",
+  ]
+  args = [
+    "pnacl-translate",
+    "$input",
+    "-o",
+    "$output",
+    "-arch",
+  ]
+  if (target_cpu == "x86" || target_cpu == "x64") {
+    args += [ "x86-32-nonsfi" ]
+  } else if (target_cpu == "arm") {
+    args += [ "arm-nonsfi" ]
+  } else {
+    assert(false, "Unrecognized target CPU for Non-SFI NaCl translation")
+  }
+  deps = [
+    ":mojo_pnacl_tests",
+  ]
+}
+
+action("prepend_shebang_to_nexe") {
+  testonly = true
+
+  script = rebase_path("//mojo/public/tools/prepend.py")
+  nexe_path = "$root_out_dir/monacl_test_nonsfi"
+  input = "${nexe_path}.nexe"
+  inputs = [
+    input,
+  ]
+  output = "${nexe_path}.mojo"
+  outputs = [
+    output,
+  ]
+
+  line = "#!mojo mojo:content_handler_nonsfi_nexe"
+  args = [
+    "--input=" + rebase_path(input, root_build_dir),
+    "--output=" + rebase_path(output, root_build_dir),
+    "--line=$line",
+  ]
+  deps = [
+    ":translate_mojo_pnacl_tests_to_native",
+  ]
+}
+
+group("monacl_test_nexes") {
+  testonly = true
+  deps = [
+    ":translate_mojo_pnacl_tests_to_native",
+    ":prepend_shebang_to_nexe",
+  ]
+}
+
+group("mojo_nacl_tests_nonsfi") {
+  testonly = true
+  deps = [
+    ":monacl_shell_x86",
+    ":monacl_test_nexes",
+  ]
+}

@@ -1,0 +1,114 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+
+source_set("ui") {
+  sources = [
+    "base_view.cc",
+    "base_view.h",
+    "input_handler.cc",
+    "input_handler.h",
+    "view_provider_app.cc",
+    "view_provider_app.h",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/application",
+    "//mojo/common",
+    "//mojo/common:tracing_impl",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/interfaces/application",
+    "//mojo/services/gfx/composition/cpp",
+    "//mojo/services/gfx/composition/interfaces",
+    "//mojo/services/ui/input/interfaces",
+    "//mojo/services/ui/views/interfaces",
+  ]
+}
+
+source_set("content") {
+  sources = [
+    "content_viewer_app.cc",
+    "content_viewer_app.h",
+  ]
+
+  deps = [
+    ":ui",
+    "//base",
+    "//mojo/application",
+    "//mojo/common",
+    "//mojo/public/cpp/bindings",
+    "//mojo/services/content_handler/interfaces",
+    "//mojo/services/ui/views/interfaces",
+  ]
+}
+
+source_set("gl") {
+  sources = [
+    "gl_renderer.cc",
+    "gl_renderer.h",
+    "gl_view.cc",
+    "gl_view.h",
+  ]
+
+  deps = [
+    ":ui",
+    "//base",
+    "//mojo/application",
+    "//mojo/common",
+    "//mojo/gpu",
+    "//mojo/public/cpp/bindings",
+    "//mojo/services/geometry/interfaces",
+    "//mojo/services/gfx/composition/interfaces",
+    "//mojo/services/ui/views/interfaces",
+  ]
+}
+
+source_set("ganesh") {
+  sources = [
+    "ganesh_renderer.cc",
+    "ganesh_renderer.h",
+    "ganesh_view.cc",
+    "ganesh_view.h",
+  ]
+
+  deps = [
+    ":gl",
+    ":ui",
+    "//base",
+    "//mojo/application",
+    "//mojo/common",
+    "//mojo/gpu",
+    "//mojo/public/cpp/bindings",
+    "//mojo/services/geometry/interfaces",
+    "//mojo/services/gfx/composition/interfaces",
+    "//mojo/services/ui/views/interfaces",
+    "//mojo/skia",
+    "//skia",
+  ]
+}
+
+mojo_native_application("apptests") {
+  output_name = "ui_apptests"
+
+  testonly = true
+
+  sources = [
+    "gl_renderer_apptest.cc",
+  ]
+
+  deps = [
+    ":gl",
+    ":ui",
+    "//base",
+    "//mojo/application",
+    "//mojo/application:test_support",
+    "//mojo/gpu",
+    "//mojo/public/cpp/bindings:callback",
+    "//mojo/services/geometry/interfaces",
+    "//mojo/services/gfx/composition/interfaces",
+    "//testing/gtest",
+  ]
+}

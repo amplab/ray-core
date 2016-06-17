@@ -1,0 +1,35 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/android/rules.gni")
+
+mojo_android_java_application("speech_recognizer") {
+  sources = [
+    "src/org/chromium/mojo/speech_recognizer/SpeechRecognizer.java",
+  ]
+
+  mojo_main = "org.chromium.mojo.speech_recognizer.SpeechRecognizer"
+
+  deps = [
+    ":speech_recognizer_lib",
+    "//mojo/public/java:application",
+  ]
+}
+
+# Library that allows the service code to be included directly into the
+# embedding shell. Used by https://manganese.googlesource.com/.
+android_library("speech_recognizer_lib") {
+  java_files = [
+    "src/org/chromium/mojo/speech_recognizer/SpeechRecognizerApplicationDelegate.java",
+    "src/org/chromium/mojo/speech_recognizer/SpeechRecognizerServiceImpl.java",
+  ]
+
+  deps = [
+    "//mojo/public/interfaces/application:application_java",
+    "//mojo/public/java:application",
+    "//mojo/public/java:bindings",
+    "//mojo/public/java:system",
+    "//mojo/services/speech_recognizer/interfaces:interfaces_java",
+  ]
+}

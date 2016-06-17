@@ -1,0 +1,233 @@
+#!/usr/bin/env python
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+"""Runner for Mojo application benchmarks."""
+
+import argparse
+import logging
+import numpy
+import sys
+import time
+
+from devtoolslib import benchmark
+from devtoolslib import perf_dashboard
+from devtoolslib import shell_arguments
+from devtoolslib import shell_config
+from devtoolslib.utils import disable_output_buffering
+
+
+_DESCRIPTION = """Runner for Mojo application benchmarks.
+
+|benchmark_list_file| has to be a valid Python program that sets a |benchmarks|
+dictionary. For description of the required format see
+https://github.com/domokit/devtools/blob/master/docs/mojo_benchmark.md .
+"""
+
+_logger = logging.getLogger()
+
+_CACHE_SERVICE_URL = 'mojo:url_response_disk_cache'
+_NETWORK_SERVICE_URL = 'mojo:network_service'
+
+_COLD_START_SHELL_ARGS = [
+    '--args-for=%s %s' % (_CACHE_SERVICE_URL, '--clear'),
+    '--args-for=%s %s' % (_NETWORK_SERVICE_URL, '--clear'),
+]
+
+
+def _generate_benchmark_variants(benchmark_spec):
+  """Generates benchmark specifications for individual variants of the given
+  benchmark: cold start and warm start.
+
+  Returns:
+    A list of benchmark specs corresponding to individual variants of the given
+        benchmark.
+  """
+  variants = []
+  variants.append({
+      'variant_name': 'cold start',
+      'app': benchmark_spec['app'],
+      'duration': benchmark_spec['duration'],
+      'measurements': benchmark_spec['measurements'],
+      'shell-args': benchmark_spec.get('shell-args',
+                                       []) + _COLD_START_SHELL_ARGS})
+  variants.append({
+      'variant_name': 'warm start',
+      'app': benchmark_spec['app'],
+      'duration': benchmark_spec['duration'],
+      'measurements': benchmark_spec['measurements'],
+      'shell-args': benchmark_spec.get('shell-args', [])})
+  return variants
+
+
+def _print_benchmark_error(outcome):
+  if not outcome.succeeded:
+    print 'benchmark failed: ' + outcome.error_str
+  if outcome.some_measurements_failed:
+    print 'some measurements failed'
+  print 'output: '
+  print '-' * 72
+  print outcome.output
+  print '-' * 72
+
+
+def _format_vector(results):
+  if not len(results):
+    return "med -, avg -, std-dev -, (no results)"
+
+  return "med %f, avg %f, std-dev %f %s" % (numpy.median(results),
+                                                numpy.mean(results),
+                                                numpy.std(results),
+                                                str(results))
+
+
+def _print_results(benchmark_name, variant_name, results, measurements,
+                   aggregate):
+  print '[ %s ] %s ' % (benchmark_name, variant_name)
+  for measurement in measurements:
+    print '  ' + measurement['name'] + ': ',
+    if measurement['spec'] in results:
+      if aggregate:
+        print _format_vector(results[measurement['spec']])
+      else:
+        if len(results[measurement['spec']]) == 0:
+          print '?'
+        else:
+          print '%f' % results[measurement['spec']][0]
+    else:
+      print '?'
+
+
+def _upload_results(benchmark_name, variant_name, results, measurements,
+                    script_args):
+  anything_recorded = False
+  chart_data_recorder = perf_dashboard.ChartDataRecorder(script_args.test_name)
+  chart_name = benchmark_name + '__' + variant_name
+
+  for measurement in measurements:
+    if measurement['spec'] in results:
+      if not results[measurement['spec']]:
+        continue
+
+      if script_args.aggregate:
+        chart_data_recorder.record_vector(
+            perf_dashboard.normalize_label(chart_name),
+            perf_dashboard.normalize_label(measurement['name']),
+            'ms', results[measurement['spec']])
+      else:
+        chart_data_recorder.record_scalar(
+            perf_dashboard.normalize_label(chart_name),
+            perf_dashboard.normalize_label(measurement['name']),
+            'ms', results[measurement['spec']][0])
+      anything_recorded = True
+
+  if not anything_recorded:
+    # Don't upload empty packets, see
+    # https://github.com/catapult-project/catapult/issues/1733 .
+    return True
+
+  return perf_dashboard.upload_chart_data(
+      script_args.master_name, script_args.bot_name,
+      script_args.test_name, script_args.builder_name,
+      script_args.build_number, chart_data_recorder.get_chart_data(),
+      script_args.server_url, script_args.dry_run)
+
+
+def _argparse_aggregate_type(value):
+  try:
+    cast_value = int(value)
+  except ValueError:
+    raise argparse.ArgumentTypeError('value is not a positive integer')
+
+  if cast_value < 1:
+    raise argparse.ArgumentTypeError('value is not a positive integer')
+  return cast_value
+
+
+def main():
+  disable_output_buffering()
+  parser = argparse.ArgumentParser(
+      formatter_class=argparse.RawDescriptionHelpFormatter,
+      description=_DESCRIPTION)
+  parser.add_argument('benchmark_list_file', type=file,
+                      help='a file listing benchmarks to run')
+  parser.add_argument('--aggregate', type=_argparse_aggregate_type,
+                      help='aggregate results over multiple runs. The value '
+                      'has to be a positive integer indicating the number of '
+                      'runs.')
+  parser.add_argument('--save-all-traces', action='store_true',
+                      help='save the traces produced by benchmarks to disk')
+  perf_dashboard.add_argparse_server_arguments(parser)
+
+  # Common shell configuration arguments.
+  shell_config.add_shell_arguments(parser)
+  script_args = parser.parse_args()
+  config = shell_config.get_shell_config(script_args)
+
+  try:
+    shell, common_shell_args = shell_arguments.get_shell(config, [])
+  except shell_arguments.ShellConfigurationException as e:
+    print e
+    return 1
+
+  target_os = 'android' if script_args.android else 'linux'
+  benchmark_list_params = {"target_os": target_os}
+  exec script_args.benchmark_list_file in benchmark_list_params
+
+  exit_code = 0
+  run_count = script_args.aggregate if script_args.aggregate else 1
+  for benchmark_spec in benchmark_list_params['benchmarks']:
+    benchmark_name = benchmark_spec['name']
+    variants = _generate_benchmark_variants(benchmark_spec)
+    variant_results = {variant_spec['variant_name']: {}
+                       for variant_spec in variants}
+
+    for _ in xrange(run_count):
+      for variant_spec in variants:
+        variant_name = variant_spec['variant_name']
+        app = variant_spec['app']
+        duration = variant_spec['duration']
+        shell_args = variant_spec.get('shell-args', []) + common_shell_args
+        measurements = variant_spec['measurements']
+
+        output_file = None
+        if script_args.save_all_traces:
+          output_file = 'benchmark-%s-%s-%s.trace' % (
+              benchmark_name.replace(' ', '_'),
+              variant_name.replace(' ', '_'),
+              time.strftime('%Y%m%d%H%M%S'))
+
+        outcome = benchmark.run(
+            shell, shell_args, app, duration, measurements, script_args.verbose,
+            script_args.android, output_file)
+
+        if not outcome.succeeded or outcome.some_measurements_failed:
+          _print_benchmark_error(outcome)
+          exit_code = 1
+
+        if outcome.succeeded:
+          for measurement_spec in outcome.results:
+            if measurement_spec not in variant_results[variant_name]:
+              variant_results[variant_name][measurement_spec] = []
+            variant_results[variant_name][measurement_spec].append(
+                outcome.results[measurement_spec])
+
+    for variant_spec in variants:
+      variant_name = variant_spec['variant_name']
+      _print_results(benchmark_name, variant_name,
+                     variant_results[variant_name],
+                     variant_spec['measurements'], script_args.aggregate)
+
+      if script_args.upload:
+        upload_succeeded = _upload_results(benchmark_name, variant_name,
+                                           variant_results[variant_name],
+                                           variant_spec['measurements'],
+                                           script_args)
+        if not upload_succeeded:
+          exit_code = 1
+
+  return exit_code
+
+if __name__ == '__main__':
+  sys.exit(main())

@@ -1,0 +1,5 @@
+name: camera
+dependencies:
+  mojo_services: any
+  sky: any
+  sky_tools: any

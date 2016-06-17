@@ -1,0 +1,15 @@
+*.pyc
+/tools/prebuilt/
+
+# Download the Mojom parser binary.
+/tools/bindings/mojom_tool/bin/linux64/mojom
+/tools/bindings/mojom_tool/bin/mac64/mojom
+
+# Download the mojom generators.
+# A generator is anything in the generators directory except sha1 files.
+/tools/bindings/mojom_tool/bin/linux64/generators/
+/tools/bindings/mojom_tool/bin/mac64/generators/
+!/tools/bindings/mojom_tool/bin/linux64/generators/*.sha1
+!/tools/bindings/mojom_tool/bin/mac64/generators/*.sha1
+!/tools/bindings/mojom_tool/bin/linux64/generators/legacy
+!/tools/bindings/mojom_tool/bin/mac64/generators/legacy

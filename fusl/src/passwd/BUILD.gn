@@ -1,0 +1,30 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//fusl/fusl.gni")
+
+fusl_source_set("passwd") {
+  sources = [
+    "fgetgrent.c",
+    "fgetpwent.c",
+    "fgetspent.c",
+    "getgr_a.c",
+    "getgr_r.c",
+    "getgrent.c",
+    "getgrent_a.c",
+    "getgrouplist.c",
+    "getpw_a.c",
+    "getpw_r.c",
+    "getpwent.c",
+    "getpwent_a.c",
+    "getspent.c",
+    "getspnam.c",
+    "getspnam_r.c",
+    "lckpwdf.c",
+    "nscd_query.c",
+    "putgrent.c",
+    "putpwent.c",
+    "putspent.c",
+  ]
+}

@@ -1,0 +1,8 @@
+# Native Client dependencies are now included in DEPS. This execs DEPS without
+# adding anything to ease the transition.
+
+import gclient_utils
+import os
+
+path = gclient_utils.FindGclientRoot(os.getcwd())
+execfile(os.path.join(path, 'src', 'DEPS'))  # Include proper Mojo DEPS.

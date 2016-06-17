@@ -1,0 +1,76 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+import("//third_party/cython/rules.gni")
+
+mojo_native_application("content_handler") {
+  output_name = "py_content_handler"
+  deps = [
+    ":content_handler_src",
+  ]
+}
+
+python_binary_source_set("content_handler_src") {
+  sources = [
+    "content_handler_main.cc",
+  ]
+  deps = [
+    ":mojo_system_impl",
+    "//base",
+    "//base:i18n",
+    "//mojo/application",
+    "//mojo/application:content_handler",
+    "//mojo/data_pipe_utils",
+    "//mojo/environment:chromium",
+    "//mojo/public/c/system",
+    "//mojo/public/cpp/utility",
+    "//mojo/public/python:python_common",
+    "//mojo/public/python:system_embedded",
+    "//mojo/services/content_handler/interfaces",
+    "//third_party/zlib:zip",
+    "//url:url",
+  ]
+}
+
+copy("common_system_pxd") {
+  visibility = [
+    ":mojo_system_impl",
+    ":mojo_system_impl_cython_compiler",
+  ]
+  sources = [
+    "//mojo/public/python/c_async_waiter.pxd",
+    "//mojo/public/python/c_export.pxd",
+  ]
+  outputs = [
+    "$target_gen_dir/{{source_file_part}}",
+  ]
+}
+
+python_binary_source_set("mojo_system_impl") {
+  cython_sources = [
+    "c_base.pxd",
+    "$target_gen_dir/c_async_waiter.pxd",
+    "$target_gen_dir/c_export.pxd",
+    "mojo_system_impl.pyx",
+  ]
+  sources = [
+    "python_system_impl_helper.cc",
+    "python_system_impl_helper.h",
+  ]
+  deps = [
+    "//base",
+    "//mojo/environment:chromium",
+    "//mojo/message_pump",
+    "//mojo/public/c/system",
+    "//mojo/public/cpp/system",
+    "//mojo/public/cpp/utility",
+    "//mojo/public/cpp/bindings:callback",
+    "//mojo/public/python:python_common",
+  ]
+  public_deps = [
+    ":common_system_pxd",
+  ]
+}

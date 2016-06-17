@@ -1,0 +1,105 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("../../mojo_sdk.gni")
+
+# This target provides source files and dependencies required for serializing
+# mojom types and has no references to the rest of the mojo system. It needs to
+# be linked with an |Environment| implementation for logging.
+mojo_sdk_source_set("serialization") {
+  sources = [
+    "array.h",
+    "formatting.h",
+    "lib/array_internal.cc",
+    "lib/array_internal.h",
+    "lib/array_serialization.h",
+    "lib/bindings_internal.h",
+    "lib/bindings_serialization.cc",
+    "lib/bindings_serialization.h",
+    "lib/bounds_checker.cc",
+    "lib/bounds_checker.h",
+    "lib/buffer.h",
+    "lib/fixed_buffer.cc",
+    "lib/fixed_buffer.h",
+    "lib/iterator_util.h",
+    "lib/map_data_internal.h",
+    "lib/map_internal.h",
+    "lib/map_serialization.h",
+    "lib/string_serialization.cc",
+    "lib/string_serialization.h",
+    "lib/template_util.h",
+    "lib/union_accessor.h",
+    "lib/validate_params.h",
+    "lib/validation_errors.cc",
+    "lib/validation_errors.h",
+    "lib/validation_util.cc",
+    "lib/validation_util.h",
+    "map.h",
+    "string.h",
+    "struct_ptr.h",
+    "type_converter.h",
+  ]
+
+  public_deps = [
+    ":callback",
+  ]
+
+  mojo_sdk_public_deps = [
+    "mojo/public/cpp/environment",
+    "mojo/public/cpp/system",
+  ]
+}
+
+mojo_sdk_source_set("bindings") {
+  sources = [
+    "binding.h",
+    "interface_handle.h",
+    "interface_ptr.h",
+    "interface_request.h",
+    "lib/connector.cc",
+    "lib/connector.h",
+    "lib/control_message_handler.cc",
+    "lib/control_message_handler.h",
+    "lib/control_message_proxy.cc",
+    "lib/control_message_proxy.h",
+    "lib/interface_ptr_internal.h",
+    "lib/message.cc",
+    "lib/message_builder.cc",
+    "lib/message_builder.h",
+    "lib/message_header_validator.cc",
+    "lib/message_header_validator.h",
+    "lib/message_internal.h",
+    "lib/message_validation.cc",
+    "lib/message_validation.h",
+    "lib/message_validator.cc",
+    "lib/no_interface.cc",
+    "lib/router.cc",
+    "lib/router.h",
+    "lib/synchronous_connector.cc",
+    "lib/synchronous_connector.h",
+    "message.h",
+    "message_validator.h",
+    "no_interface.h",
+    "strong_binding.h",
+    "synchronous_interface_ptr.h",
+  ]
+
+  public_deps = [
+    ":serialization",
+  ]
+
+  mojo_sdk_deps = [ "mojo/public/interfaces/bindings:bindings_cpp_sources" ]
+}
+
+mojo_sdk_source_set("callback") {
+  sources = [
+    "callback.h",
+    "lib/callback_internal.h",
+    "lib/shared_data.h",
+    "lib/shared_ptr.h",
+    "lib/template_util.h",
+  ]
+
+  mojo_sdk_deps = [ "mojo/public/cpp/system" ]
+}

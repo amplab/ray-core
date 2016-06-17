@@ -1,0 +1,29 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+
+mojo_native_application("flog") {
+  sources = [
+    "flog_directory.cc",
+    "flog_directory.h",
+    "flog_logger_impl.cc",
+    "flog_logger_impl.h",
+    "flog_reader_impl.cc",
+    "flog_reader_impl.h",
+    "flog_service_impl.cc",
+    "flog_service_impl.h",
+    "main.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/application",
+    "//mojo/common",
+    "//mojo/public/cpp/application",
+    "//mojo/services/files/interfaces",
+    "//mojo/services/flog/interfaces",
+    "//services/util/cpp",
+  ]
+}

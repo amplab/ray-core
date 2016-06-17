@@ -1,0 +1,22 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+template("fusl_source_set") {
+  assert(defined(invoker.sources))
+
+  source_set(target_name) {
+    # We want to control all our flags when building against fusl for
+    # now, so clear out configs to start.
+    configs = []
+
+    forward_variables_from(invoker,
+                           [
+                             "configs",
+                             "deps",
+                             "sources",
+                           ])
+
+    configs += [ "//fusl:fusl_config" ]
+  }
+}

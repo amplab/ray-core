@@ -1,0 +1,55 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+
+group("factory_service") {
+  deps = [
+    ":media_factory",
+  ]
+}
+
+mojo_native_application("media_factory") {
+  sources = [
+    "factory_service.cc",
+    "factory_service.h",
+    "main.cc",
+    "media_decoder_impl.cc",
+    "media_decoder_impl.h",
+    "media_demux_impl.cc",
+    "media_demux_impl.h",
+    "media_player_impl.cc",
+    "media_player_impl.h",
+    "media_sink_impl.cc",
+    "media_sink_impl.h",
+    "media_source_impl.cc",
+    "media_source_impl.h",
+    "media_timeline_controller_impl.cc",
+    "media_timeline_controller_impl.h",
+    "network_reader_impl.cc",
+    "network_reader_impl.h",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/application",
+    "//mojo/common",
+    "//mojo/public/cpp/application",
+    "//mojo/public/cpp/system",
+    "//mojo/services/media/audio/interfaces",
+    "//mojo/services/media/common/cpp",
+    "//mojo/services/media/common/interfaces",
+    "//mojo/services/media/control/interfaces",
+    "//mojo/services/media/core/interfaces",
+    "//mojo/services/network/interfaces",
+    "//services/media/common",
+    "//services/media/framework",
+    "//services/media/framework_create",
+    "//services/media/framework_ffmpeg",
+    "//services/media/framework_mojo",
+    "//services/util/cpp",
+    "//url",
+  ]
+}

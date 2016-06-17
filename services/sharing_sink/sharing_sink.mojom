@@ -1,0 +1,14 @@
+// Copyright 2015 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+[JavaPackage="org.chromium.mojom.sharing"]
+module sharing_sink;
+
+// Private interface for the shell. When the shell connects to the sharing
+// service this interface will be returned which can be used to send shareable
+// data to registered apps.
+[ServiceName="sharing_sink::SharingSink"]
+interface SharingSink {
+  OnTextShared(string data);
+};

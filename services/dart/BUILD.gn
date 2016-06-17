@@ -1,0 +1,72 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/mojo_application.gni")
+
+group("dart") {
+  deps = [
+    ":dart_content_handler",
+  ]
+}
+
+source_set("dart_controller") {
+  sources = [
+    "$root_gen_dir/dart_snapshot.cc",
+  ]
+
+  deps = [
+    "//mojo/dart/embedder:dart_controller_no_snapshot",
+    "//mojo/dart/embedder:generate_snapshot_file",
+  ]
+}
+
+mojo_native_application("dart_content_handler") {
+  sources = [
+    "content_handler_main.cc",
+  ]
+
+  deps = [
+    ":lib",
+    "//mojo/application",
+  ]
+}
+
+# Library that allows the service code to be included directly into the
+# embedding shell. Used by https://manganese.googlesource.com/.
+source_set("lib") {
+  sources = [
+    "content_handler_app.cc",
+    "content_handler_app.h",
+    "content_handler_app_service_connector.cc",
+    "content_handler_app_service_connector.h",
+    "dart_app.cc",
+    "dart_app.h",
+    "dart_tracing.cc",
+    "dart_tracing.h",
+  ]
+
+  deps = [
+    ":dart_controller",
+    "//base",
+    "//base:i18n",
+    "//crypto",
+    "//dart/runtime:libdart",
+    "//mojo/application",
+    "//mojo/application:content_handler",
+    "//mojo/common:tracing_impl",
+    "//mojo/dart/embedder:dart_controller_no_snapshot",
+    "//mojo/data_pipe_utils",
+    "//mojo/environment:chromium",
+    "//mojo/public/cpp/system",
+    "//mojo/public/cpp/utility",
+    "//mojo/public/interfaces/application",
+    "//mojo/services/content_handler/interfaces",
+    "//mojo/services/files/interfaces",
+    "//mojo/services/network/interfaces",
+    "//mojo/services/tracing/interfaces",
+    "//mojo/services/url_response_disk_cache/interfaces",
+    "//third_party/zlib:zip",
+    "//url:url",
+  ]
+}

@@ -1,0 +1,92 @@
+# This file contains a list of Mojo benchmarks. For description of the file
+# format, see `mojo_benchmark --help`.
+
+benchmarks = [
+  {
+    'name': 'dart init',
+    'app': 'https://core.mojoapps.io/dart_startup.mojo',
+    'duration': 10,
+    'measurements': [
+      {
+        'name': 'initialize',
+        'spec': 'time_until/Dart/initialized'
+      },
+      {
+        'name': 'accept connection',
+        'spec': 'time_between/Dart/initialized/Dart/connected',
+      }
+    ],
+    'shell-args': [
+      '--args-for=mojo:dart_content_handler --dart-timeline',
+    ]
+  },
+  {
+    'name': 'dart init with handler',
+    'app': 'https://core.mojoapps.io/dart_handler_running.mojo',
+    'duration': 10,
+    'measurements': [
+      {
+        'name': 'initialize',
+        'spec': 'time_between/Dart/connecting/Dart/initialized',
+      }
+    ],
+    'shell-args': [
+      '--args-for=mojo:dart_content_handler --dart-timeline',
+    ]
+  },
+  {
+    'name': 'dart init no observatory',
+    'app': 'https://core.mojoapps.io/dart_startup.mojo',
+    'duration': 10,
+    'measurements': [
+      {
+        'name': 'initialize',
+        'spec': 'time_until/Dart/initialized'
+      },
+      {
+        'name': 'accept connection',
+        'spec': 'time_between/Dart/initialized/Dart/connected',
+      }
+    ],
+    'shell-args': [
+      '--args-for=mojo:dart_content_handler --disable-observatory --dart-timeline',
+    ]
+  },
+  {
+    'name': 'dart init run (message loop)',
+    'app': 'https://core.mojoapps.io/dart_startup.mojo',
+    'duration': 10,
+    'measurements': [
+      {
+        'name': 'initialize',
+        'spec': 'time_until/Dart/initialized'
+      },
+      {
+        'name': 'accept connection',
+        'spec': 'time_between/Dart/initialized/Dart/connected',
+      }
+    ],
+    'shell-args': [
+      '--args-for=mojo:dart_content_handler --run-on-message-loop --dart-timeline',
+    ]
+  },
+  {
+    'name': 'cpp init',
+    'app': 'https://core.mojoapps.io/trace_me.mojo',
+    'duration': 10,
+    'measurements': [
+      {
+        'name': 'initialize',
+        'spec': 'time_until/trace_me/initialized',
+      },
+      {
+        'name': 'accept connection',
+        'spec': 'time_between/trace_me/initialized/trace_me/connected',
+      }
+    ],
+    'shell-args': [
+      '--args-for=https://core.mojoapps.io/trace_me.mojo --early-tracing',
+    ]
+  },
+]
+

@@ -1,0 +1,82 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/tools/bindings/mojom.gni")
+import("//testing/test.gni")
+
+source_set("application_manager") {
+  output_name = "mojo_application_manager"
+  sources = [
+    "application_loader.h",
+    "application_manager.cc",
+    "application_manager.h",
+    "fetcher.cc",
+    "fetcher.h",
+    "identity.cc",
+    "identity.h",
+    "local_fetcher.cc",
+    "local_fetcher.h",
+    "native_application_options.h",
+    "native_runner.h",
+    "network_fetcher.cc",
+    "network_fetcher.h",
+    "query_util.cc",
+    "query_util.h",
+    "shell_impl.cc",
+    "shell_impl.h",
+  ]
+
+  # TODO(toshik): FNL hasn't supported authentication, yet
+  if (is_fnl) {
+    defines = [ "NO_AUTHENTICATION" ]
+  }
+
+  public_deps = [
+    "//base",
+    "//mojo/converters/url",
+    "//mojo/data_pipe_utils",
+    "//mojo/public/interfaces/application:application",
+    "//mojo/services/authenticating_url_loader_interceptor/interfaces",
+    "//mojo/services/authentication/interfaces",
+    "//mojo/services/network/interfaces",
+    "//mojo/services/url_response_disk_cache/interfaces",
+    "//url",
+  ]
+  deps = [
+    "//base/third_party/dynamic_annotations",
+    "//crypto:crypto",
+    "//mojo/common",
+    "//mojo/edk/system",
+    "//mojo/environment:chromium",
+    "//mojo/services/content_handler/interfaces",
+    "//shell:native_application_support",
+    "//url",
+  ]
+}
+
+test("mojo_application_manager_unittests") {
+  sources = [
+    "application_manager_unittest.cc",
+    "query_util_unittest.cc",
+  ]
+
+  deps = [
+    ":application_manager",
+    ":test_bindings",
+    "//base",
+    "//mojo/application",
+    "//mojo/edk/test:run_all_unittests",
+    "//mojo/environment:chromium",
+    "//mojo/public/cpp/application",
+    "//mojo/public/cpp/bindings",
+    "//testing/gtest",
+    "//url",
+  ]
+}
+
+mojom("test_bindings") {
+  sources = [
+    "test.mojom",
+  ]
+}

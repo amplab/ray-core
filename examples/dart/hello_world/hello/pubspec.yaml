@@ -1,0 +1,10 @@
+name: mojo_dart_hello
+author: Chromium Authors <mojo-dev@googlegroups.com>
+description: A Hello World style Mojo example app.
+dependencies:
+  mojo_sdk: 0.2.9
+dev_dependencies:
+  args: ^0.13.2
+  path: ^1.3.9
+  test: ^0.12.6
+version: 0.0.1

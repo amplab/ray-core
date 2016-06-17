@@ -1,0 +1,19 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//fusl/fusl.gni")
+
+fusl_source_set("sched") {
+  sources = [
+    "affinity.c",
+    "sched_cpucount.c",
+    "sched_get_priority_max.c",
+    "sched_getparam.c",
+    "sched_getscheduler.c",
+    "sched_rr_get_interval.c",
+    "sched_setparam.c",
+    "sched_setscheduler.c",
+    "sched_yield.c",
+  ]
+}

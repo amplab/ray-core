@@ -1,0 +1,51 @@
+# Copyright 2015 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//mojo/public/python/rules.gni")
+import("//mojo/public/mojo_application.gni")
+
+python_packaged_application("mojo_url_redirector") {
+  sources = [
+    "__mojo__.py",
+  ]
+  deps = [
+    "//mojo/public/interfaces/application:application_python",
+    "//mojo/public/interfaces/network:network_python",
+    "//mojo/public/python:packaged_application",
+    "//mojo/public/python:packaged_bindings",
+    "//mojo/python:packaged_utils",
+    "//mojo/services/http_server/interfaces:interfaces_python",
+    "//mojo/services/network/interfaces:interfaces_python",
+  ]
+  datadeps = [
+    "//services/python/content_handler",
+  ]
+  debug = true
+}
+
+mojo_native_application("apptests") {
+  output_name = "mojo_url_redirector_apptests"
+
+  testonly = true
+
+  sources = [
+    "mojo_url_redirector_apptest.cc",
+  ]
+
+  deps = [
+    "//base",
+    "//mojo/application",
+    "//mojo/application:test_support",
+    "//mojo/data_pipe_utils",
+    "//mojo/public/interfaces/application",
+    "//mojo/services/http_server/cpp",
+    "//mojo/services/http_server/interfaces",
+    "//mojo/services/network/interfaces",
+  ]
+
+  data_deps = [
+    ":mojo_url_redirector",
+    "//services/python/content_handler",
+  ]
+}
