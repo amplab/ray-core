@@ -27,6 +27,8 @@ class EchoClientApp : public ApplicationImplBase {
     mojo::String out = "yo!";
     MOJO_CHECK(echo->EchoString("hello", &out));
     MOJO_LOG(INFO) << "Got response: " << out;
+
+    RequestQuit();
   }
 };
 
