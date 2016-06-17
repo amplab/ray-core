@@ -26,9 +26,6 @@ group("default") {
       "//examples(//build/toolchain/fusl:fusl_${current_cpu})",
       "//fusl",
       "//services(//build/toolchain/fusl:fusl_${current_cpu})",
-
-      # We need this to run tests (especially on bots).
-      "//third_party/mesa:osmesa",
     ]
   }
 
@@ -39,20 +36,6 @@ group("default") {
       "//sandbox/linux:sandbox_linux_unittests",
     ]
   }
-  if (is_linux && !use_ozone) {
-    deps += [ "//tools/xdisplaycheck" ]
-  }
-
-  if (is_linux || is_android) {
-    deps += [
-      "//ui/events:events_unittests",
-      "//ui/gfx:gfx_unittests",
-    ]
-  }
-
-  if (use_ozone) {
-    deps += [ "//ui/ozone" ]
-  }
 }
 
 # Deprecated name for the default build target.
@@ -61,15 +44,4 @@ group("root") {
   deps = [
     ":default",
   ]
-}
-
-if (use_ozone) {
-  # This isn't in the default target as it's a bit wonky right now.
-  group("ozone_tests") {
-    testonly = true
-    deps = [
-      "//ui/ozone:ozone_unittests",
-      "//ui/ozone/demo",
-    ]
-  }
 }

@@ -246,7 +246,6 @@ source_set("parent_lib") {
       "//mojo/services/content_handler/interfaces",
       "//mojo/services/gpu/interfaces",
       "//mojo/services/native_viewport/interfaces",
-      "//services/gles2",
       "//services/native_viewport:lib",
     ]
   }
@@ -276,9 +275,6 @@ source_set("native_application_support") {
 
   deps = [
     "//base",
-    "//mojo/gles2:control_thunks",
-    "//mojo/gles2:gles2",
-    "//mojo/gles2:mgl",
     "//mojo/public/platform/native:platform_handle_api",
   ]
 
@@ -385,7 +381,6 @@ if (is_android) {
       "//services/nfc_message_sink:bindings_java",
       "//services/sharing_sink:bindings_java",
       "//third_party/android_tools:android_support_v13_java",
-      "//ui/gl:gl_java",
     ]
   }
 
@@ -426,7 +421,6 @@ if (is_android) {
       sources += [
         "$root_out_dir/authenticating_url_loader_interceptor.mojo",
         "$root_out_dir/compositor_service.mojo",
-        "$root_out_dir/dart_content_handler.mojo",
         "$root_out_dir/files.mojo",
         "$root_out_dir/icu_data.mojo",
         "$root_out_dir/input_manager_service.mojo",
@@ -439,16 +433,12 @@ if (is_android) {
 
       deps += [
         "//services/authenticating_url_loader_interceptor",
-        "//services/dart:dart_content_handler",
         "//services/files",
         "//services/gfx/compositor",
         "//services/icu_data",
         "//services/java_handler",
         "//services/speech_recognizer",
         "//services/tracing",
-        "//services/ui/input_manager",
-        "//services/ui/launcher",
-        "//services/ui/view_manager",
       ]
     }
   }

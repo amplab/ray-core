@@ -6,9 +6,6 @@ group("benchmarks") {
   testonly = true
 
   deps = [
-    "//benchmarks/dart_handler_running",
-    "//benchmarks/dart_startup",
-    "//benchmarks/mojo_rtt_benchmark",
     "//benchmarks/startup",
   ]
 }

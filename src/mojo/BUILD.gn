@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-import("//build/config/nacl/config.gni")
 import("//build/module_args/mojo.gni")
 import("//mojo/public/mojo.gni")
 import("//testing/test.gni")
@@ -18,7 +17,6 @@ group("mojo") {
     ":system_thunks",
     ":tests",
     "//mojo/common",
-    "//mojo/dart",
     "//mojo/public",
     "//mojo/services",
   ]
@@ -38,15 +36,6 @@ group("mojo") {
   if (is_linux && !is_fnl) {
     deps += [ "//mojo/python" ]
   }
-
-  if (mojo_use_nacl) {
-    if (mojo_use_nacl_nonsfi) {
-      deps += [
-        "//mojo/nacl/nonsfi:mojo_nacl",
-        "//mojo/nacl/nonsfi:mojo_nacl_tests_nonsfi",
-      ]
-    }
-  }
 }
 
 group("tests") {
@@ -54,24 +43,16 @@ group("tests") {
   deps = [
     ":public_tests",
     "//mojo/common:mojo_common_apptests",
-    "//mojo/converters:mojo_converters_unittests",
-    "//mojo/dart:tests",
     "//mojo/data_pipe_utils:mojo_data_pipe_utils_apptests",
     "//mojo/edk:tests",
     "//mojo/file_utils:file_utils_apptests",
-    "//mojo/gles2:mgl_unittests",
     "//mojo/message_pump:mojo_message_pump_apptests",
     "//mojo/public/cpp/bindings/tests:versioning_apptests",
     "//mojo/public/platform/native:tests",
     "//mojo/services/files/c:apptests",
     "//mojo/services/files/cpp:files_impl_apptests",
-    "//mojo/services/gfx/composition/cpp:apptests",
-    "//mojo/services/gfx/images/cpp:image_pipe_apptest",
-    "//mojo/services/gfx/images/cpp:image_pipe_apptest",
     "//mojo/services/log/cpp:log_client_apptests",
     "//mojo/tools:message_generator",
-    "//mojo/ui:apptests",
-    "//mojo/ui/associates:apptests",
   ]
 
   if (mojo_use_prebuilt_network_service) {
