@@ -15,6 +15,8 @@
 #include "mojo/public/cpp/environment/logging.h"
 #include "mojo/public/cpp/utility/run_loop.h"
 
+#include <iostream>
+
 namespace mojo {
 namespace examples {
 
