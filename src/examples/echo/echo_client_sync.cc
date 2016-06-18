@@ -40,6 +40,8 @@ class EchoClientApp : public ApplicationImplBase {
 MojoResult MojoMain(MojoHandle application_request) {
   mojo::examples::EchoClientApp echo_client_app;
   mojo::SynchronousInterfacePtr<mojo::examples::Echo> echo;
+  echo_client_app.Bind(InterfaceRequest<Application>(
+      MakeScopedHandle(MessagePipeHandle(application_request))));
   mojo::ConnectToService(echo_client_app.shell(), "mojo:echo_server", mojo::GetSynchronousProxy(&echo));
   mojo::String out = "yo!";
   MOJO_CHECK(echo->EchoString("hello", &out));
