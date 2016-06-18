@@ -41,5 +41,6 @@ MojoResult MojoMain(MojoHandle application_request) {
   mojo::ConnectToService(echo_client_app.shell(), "mojo:echo_server", mojo::GetSynchronousProxy(&echo));
   mojo::String out = "yo!";
   MOJO_CHECK(echo->EchoString("hello", &out));
+  return MOJO_RESULT_OK;
   // return mojo::RunApplication(application_request, &echo_client_app);
 }
