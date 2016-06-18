@@ -16,6 +16,7 @@
 #include "mojo/public/cpp/utility/run_loop.h"
 
 #include "base/message_loop/message_loop.h"
+#include "mojo/message_pump/message_pump_mojo.h"
 
 #include <iostream>
 
