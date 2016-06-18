@@ -38,7 +38,7 @@ class EchoClientApp : public ApplicationImplBase {
 MojoResult MojoMain(MojoHandle application_request) {
   mojo::examples::EchoClientApp echo_client_app;
   mojo::SynchronousInterfacePtr<mojo::examples::Echo> echo;
-  mojo::ConnectToService(echo.shell(), "mojo:echo_server", mojo::GetSynchronousProxy(&echo));
+  mojo::ConnectToService(echo_client_app.shell(), "mojo:echo_server", mojo::GetSynchronousProxy(&echo));
   mojo::String out = "yo!";
   MOJO_CHECK(echo->EchoString("hello", &out));
   // return mojo::RunApplication(application_request, &echo_client_app);
