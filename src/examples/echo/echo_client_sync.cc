@@ -40,6 +40,7 @@ class EchoClientApp : public ApplicationImplBase {
 MojoResult MojoMain(MojoHandle application_request) {
   mojo::examples::EchoClientApp echo_client_app;
   mojo::SynchronousInterfacePtr<mojo::examples::Echo> echo;
+  std::unique_ptr<base::MessageLoop> loop(new base::MessageLoop(common::MessagePumpMojo::Create()));
   echo_client_app.Bind(mojo::InterfaceRequest<mojo::Application>(
       mojo::MakeScopedHandle(mojo::MessagePipeHandle(application_request))));
   mojo::ConnectToService(echo_client_app.shell(), "mojo:echo_server", mojo::GetSynchronousProxy(&echo));
