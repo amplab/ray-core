@@ -64,6 +64,7 @@ executable("client_standalone") {
     "//mojo/edk/system",
     "//mojo/environment:chromium",
     "//mojo/message_pump",
+    "//mojo/application",
   ]
 
   sources = [
