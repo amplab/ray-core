@@ -44,6 +44,7 @@
 #include "shell/init.h"
 #include "shell/native_application_support.h"
 
+#include "examples/echo/echo.mojom-sync.h"
 #include "exchange_file_descriptor.h"
 
 using mojo::platform::PlatformHandle;
@@ -53,6 +54,26 @@ using mojo::platform::TaskRunner;
 using mojo::util::MakeRefCounted;
 using mojo::util::MakeUnique;
 using mojo::util::RefPtr;
+
+namespace mojo {
+namespace examples {
+
+class EchoClientApp : public ApplicationImplBase {
+ public:
+  void OnInitialize() override {
+    SynchronousInterfacePtr<Echo> echo;
+    ConnectToService(shell(), "mojo:echo_server", GetSynchronousProxy(&echo));
+
+    mojo::String out = "yo!";
+    MOJO_CHECK(echo->EchoString("hello", &out));
+    MOJO_LOG(INFO) << "Got response: " << out;
+
+    Terminate(MOJO_RESULT_OK);
+  }
+};
+
+}  // namespace examples
+}  // namespace mojo
 
 namespace shell {
 namespace {
@@ -282,10 +303,15 @@ class ChildControllerImpl : public ChildController {
     DVLOG(2) << "Loading/running Mojo app from " << app_path.value()
              << " out of process";
 
-    // We intentionally don't unload the native library as its lifetime is the
-    // same as that of the process.
-    base::NativeLibrary app_library = LoadNativeApplication(app_path);
-    RunNativeApplication(app_library, application_request.Pass());
+    mojo::examples::EchoClientApp echo_client_app;
+    mojo::SynchronousInterfacePtr<mojo::examples::Echo> echo;
+    std::unique_ptr<base::MessageLoop> loop(new base::MessageLoop(mojo::common::MessagePumpMojo::Create()));
+    echo_client_app.Bind(mojo::InterfaceRequest<mojo::Application>(
+      mojo::MakeScopedHandle(mojo::MessagePipeHandle(application_request))));
+    mojo::ConnectToService(echo_client_app.shell(), "mojo:echo_server", mojo::GetSynchronousProxy(&echo));
+    mojo::String out = "yo!";
+    MOJO_CHECK(echo->EchoString("hello", &out));
+    std::cout << "result: " << out << std::endl;
   }
 
   base::ThreadChecker thread_checker_;
