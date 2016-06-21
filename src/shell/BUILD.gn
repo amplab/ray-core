@@ -195,6 +195,7 @@ source_set("parent_lib") {
     "url_resolver.h",
     "url_response_disk_cache_loader.cc",
     "url_response_disk_cache_loader.h",
+    "examples/echo/exchange_file_descriptor.cc",
   ]
 
   deps = [
