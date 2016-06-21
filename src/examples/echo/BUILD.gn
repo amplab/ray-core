@@ -64,6 +64,24 @@ mojo_native_application("client_sync") {
   ]
 }
 
+mojo_native_application("client_standalone") {
+  output_name = "echo_client_standalone"
+
+  deps = [
+    ":bindings",
+    ":bindings_sync",
+    "//base",
+    "//mojo/edk/base_edk",
+    "//mojo/edk/system",
+    "//mojo/edk/platform",
+    "//mojo/edk/embedder",
+  ]
+
+  sources = [
+    "echo_client_standalone.cc",
+  ]
+}
+
 mojo_native_application("server") {
   output_name = "echo_server"
 
