@@ -78,14 +78,26 @@ void ChildProcessHost::Start(const NativeApplicationOptions& options) {
   // |channel_info_|, but only after the callback has been called.
   CHECK(channel_info_);
 
-  controller_.Bind(mojo::InterfaceHandle<ChildController>(handle.Pass(), 0u));
-  controller_.set_connection_error_handler([this]() { OnConnectionError(); });
+  std::cout << context_->mojo_shell_child_path().value() << std::endl;
+  std::cout << "Do you want to infuse a file handle?" << std::endl;
+  int answer = 0;
+  std::cin >> answer;
 
-  CHECK(base::PostTaskAndReplyWithResult(
+  controller_.Bind(mojo::InterfaceHandle<ChildController>(handle.Pass(), 0u));
+  if(answer == 1) {
+    std::cout << launch_data->child_connection_id << std::endl;
+    FileDescriptorSender sender("/home/pcmoritz/server");
+    sender.Send(launch_data->platform_pipe.handle1.Pass().get().fd);
+    external_process_ = true;
+  } else {
+    controller_.set_connection_error_handler([this]() { OnConnectionError(); });
+
+    CHECK(base::PostTaskAndReplyWithResult(
       context_->task_runners()->blocking_pool(), FROM_HERE,
       base::Bind(&ChildProcessHost::DoLaunch, base::Unretained(this),
                  base::Passed(&launch_data)),
       base::Bind(&ChildProcessHost::DidStart, base::Unretained(this))));
+  }
 }
 
 int ChildProcessHost::Join() {
