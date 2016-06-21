@@ -28,6 +28,8 @@
 #include "shell/context.h"
 #include "shell/task_runners.h"
 
+#include <iostream>
+
 using mojo::platform::PlatformPipe;
 using mojo::util::MakeRefCounted;
 
@@ -44,7 +46,7 @@ struct ChildProcessHost::LaunchData {
 };
 
 ChildProcessHost::ChildProcessHost(Context* context)
-    : context_(context), channel_info_(nullptr) {
+    : context_(context), channel_info_(nullptr), external_process_(false) {
 }
 
 ChildProcessHost::~ChildProcessHost() {
@@ -101,6 +103,9 @@ void ChildProcessHost::Start(const NativeApplicationOptions& options) {
 }
 
 int ChildProcessHost::Join() {
+  if (external_process_) {
+    return 0;
+  }
   DCHECK(child_process_.IsValid());
   int rv = -1;
   LOG_IF(ERROR, !child_process_.WaitForExit(&rv))
