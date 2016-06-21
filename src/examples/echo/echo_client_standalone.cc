@@ -44,6 +44,7 @@
 #include "shell/init.h"
 #include "shell/native_application_support.h"
 
+#include <iostream>
 #include "examples/echo/echo.mojom-sync.h"
 #include "mojo/public/cpp/application/application_impl_base.h"
 #include "mojo/public/cpp/application/connect.h"
