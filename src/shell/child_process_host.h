@@ -84,6 +84,8 @@ class ChildProcessHost {
 
   base::Process child_process_;
 
+  bool external_process_;
+
   DISALLOW_COPY_AND_ASSIGN(ChildProcessHost);
 };
 
