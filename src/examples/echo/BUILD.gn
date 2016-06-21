@@ -54,6 +54,7 @@ executable("client_standalone") {
   deps = [
     ":bindings",
     ":bindings_sync",
+    "//shell/native_application_support",
     "//base",
     "//base/allocator",
     "//build/config/sanitizers:deps",
