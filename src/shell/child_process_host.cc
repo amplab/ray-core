@@ -29,6 +29,7 @@
 #include "shell/task_runners.h"
 
 #include <iostream>
+#include "examples/hello_mojo/exchange_file_descriptor.h"
 
 using mojo::platform::PlatformPipe;
 using mojo::util::MakeRefCounted;
