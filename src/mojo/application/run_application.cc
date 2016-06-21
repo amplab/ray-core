@@ -86,8 +86,8 @@ void TerminateApplication(MojoResult result) {
   base::MessageLoop::current()->Quit();
 
   ResultHolder* result_holder = g_current_result_holder.Pointer()->Get();
-  DCHECK(result_holder);
-  result_holder->result = result;
+  // DCHECK(result_holder);
+  // result_holder->result = result;
 #if !defined(NDEBUG) || defined(DCHECK_ALWAYS_ON)
   DCHECK(!result_holder->is_set);
   result_holder->is_set = true;
