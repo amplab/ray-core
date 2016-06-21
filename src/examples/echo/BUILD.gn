@@ -54,15 +54,18 @@ mojo_native_application("client_standalone") {
   deps = [
     ":bindings",
     ":bindings_sync",
+    "//shell:child_controller_bindings",
     "//base",
-    "//mojo/public/c/system",
-    "//mojo/public/cpp/environment:standalone",
-    "//mojo/public/cpp/application:standalone",
-    "//mojo/public/cpp/bindings",
     "//mojo/edk/base_edk",
     "//mojo/edk/system",
-    "//mojo/edk/platform",
-    "//mojo/edk/embedder",
+    "//mojo/message_pump",
+    "//base/allocator",
+    "//build/config/sanitizers:deps",
+    "//mojo/environment:chromium",
+    "//mojo/message_pump",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/platform/native:platform_handle_api",
+    "//mojo/application",
   ]
 
   sources = [
