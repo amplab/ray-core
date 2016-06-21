@@ -48,22 +48,6 @@ mojo_native_application("client") {
   ]
 }
 
-mojo_native_application("client_sync") {
-  output_name = "echo_client_sync"
-
-  deps = [
-    ":bindings",
-    ":bindings_sync",
-    "//mojo/public/cpp/application:standalone",
-    "//mojo/public/cpp/bindings",
-    "//mojo/public/cpp/utility",
-  ]
-
-  sources = [
-    "echo_client_sync.cc",
-  ]
-}
-
 mojo_native_application("client_standalone") {
   output_name = "echo_client_standalone"
 
