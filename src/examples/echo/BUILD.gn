@@ -65,7 +65,8 @@ executable("client_standalone") {
 
   sources = [
     "echo_client_standalone.cc",
-    "exchange_file_descriptor.cc"
+    "exchange_file_descriptor.cc",
+    "../../shell/init.cc"
   ]
 }
 
