@@ -48,7 +48,7 @@ mojo_native_application("client") {
   ]
 }
 
-mojo_native_application("client_standalone") {
+executable("client_standalone") {
   output_name = "echo_client_standalone"
 
   deps = [
