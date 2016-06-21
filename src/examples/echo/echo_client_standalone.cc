@@ -312,6 +312,7 @@ class ChildControllerImpl : public ChildController {
     mojo::SynchronousInterfacePtr<mojo::examples::Echo> echo;
     std::unique_ptr<base::MessageLoop> loop(new base::MessageLoop(mojo::common::MessagePumpMojo::Create()));
     echo_client_app.Bind(application_request.Pass());
+    loop.Run();
     mojo::ConnectToService(echo_client_app.shell(), "mojo:echo_server", mojo::GetSynchronousProxy(&echo));
     mojo::String out = "yo!";
     MOJO_CHECK(echo->EchoString("hello", &out));
