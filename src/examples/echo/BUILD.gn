@@ -9,7 +9,7 @@ group("echo") {
   deps = [
     ":benchmark",
     ":client",
-    ":client_sync",
+    ":client_standalone",
     ":server",
   ]
 }
