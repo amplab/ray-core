@@ -85,7 +85,7 @@ namespace shell {
 namespace {
 
 class ResponseNotifier {
-  ResponseNotifier();
+  ResponseNotifier() {};
  public:
   void Run(const String& value) const {
     LOG(INFO) << "***** Response: " << value.get().c_str();
