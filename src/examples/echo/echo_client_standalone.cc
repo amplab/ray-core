@@ -68,7 +68,7 @@ namespace examples {
 class ResponseNotifier {
   std::chrono::time_point start_;
  public:
-  ResponseNotifier() { start_ = std::chrono::high_resolution_clock::now(); }
+  ResponseNotifier() : start_(std::chrono::high_resolution_clock::now()) {}
   void Run(const mojo::String& value) const {
     auto stop = std::chrono::high_resolution_clock::now();
     std::cout << "async: " << std::chrono::duration_cast<std::chrono::nanoseconds>(stop-start_).count() << "ns\n";
