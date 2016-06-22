@@ -84,6 +84,14 @@ class EchoClientApp : public ApplicationImplBase {
 namespace shell {
 namespace {
 
+class ResponseNotifier {
+  ResponseNotifier();
+ public:
+  void Run(const String& value) const {
+    LOG(INFO) << "***** Response: " << value.get().c_str();
+  }
+};
+
 // Blocker ---------------------------------------------------------------------
 
 // Blocks a thread until another thread unblocks it, at which point it unblocks
@@ -323,6 +331,11 @@ class ChildControllerImpl : public ChildController {
       std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() << "ns\n";
     }
     std::cout << "result: " << out << std::endl;
+    EchoPtr echo;
+    ConnectToService(echo_client_app.shell(), "mojo:echo_server", GetProxy(&echo));
+    for (int i = 0; i < 100; ++i) {
+      echo_->EchoString("hello world", ResponseNotifier());
+    }
   }
 
   base::ThreadChecker thread_checker_;
