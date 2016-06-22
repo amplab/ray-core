@@ -309,7 +309,7 @@ class ChildControllerImpl : public ChildController {
     echo_client_app.Bind(application_request.Pass());
     loop->Run();
     mojo::ConnectToService(echo_client_app.shell(), "mojo:echo_server", mojo::GetSynchronousProxy(&echo));
-    mojo::uint32 out = 0;
+    uint32 out = 0;
     for (int i = 0; i < 100; ++i) {
       auto start = std::chrono::high_resolution_clock::now();
       echo->EchoString(42, &out);
