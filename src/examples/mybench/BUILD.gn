@@ -9,6 +9,7 @@ group("mybench") {
   deps = [
     ":client_standalone",
     ":server",
+    ":client"
   ]
 }
 
