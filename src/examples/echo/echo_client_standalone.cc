@@ -68,12 +68,20 @@ namespace examples {
 class EchoClientApp : public ApplicationImplBase {
  public:
   void OnInitialize() override {
-    SynchronousInterfacePtr<Echo> echo;
-    ConnectToService(shell(), "mojo:echo_server", GetSynchronousProxy(&echo));
+    // SynchronousInterfacePtr<Echo> echo;
+    // ConnectToService(shell(), "mojo:echo_server", GetSynchronousProxy(&echo));
 
-    mojo::String out = "yo!";
-    MOJO_CHECK(echo->EchoString("hello", &out));
-    MOJO_LOG(INFO) << "Got response: " << out;
+    mojo::examples::EchoPtr echo2;
+    ConnectToService(echo_client_app.shell(), "mojo:echo_server", GetProxy(&echo2));
+    for (int i = 0; i < 100; ++i) {
+      echo2->EchoString("hello world", ResponseNotifier());
+    }
+
+    std::cout << "XXX done" << std::endl;
+
+    // mojo::String out = "yo!";
+    // MOJO_CHECK(echo->EchoString("hello", &out));
+    // MOJO_LOG(INFO) << "Got response: " << out;
 
     Terminate(MOJO_RESULT_OK);
   }
