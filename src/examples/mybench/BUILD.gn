@@ -12,7 +12,7 @@ group("mybench") {
   ]
 }
 
-executable("mybench_standalone") {
+executable("client_standalone") {
   output_name = "mybench_client_standalone"
 
   deps = [
