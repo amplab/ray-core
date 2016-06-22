@@ -12,6 +12,22 @@ group("mybench") {
   ]
 }
 
+mojo_native_application("client") {
+  output_name = "mybench_client"
+
+  deps = [
+    ":bindings",
+    "//base",
+    "//mojo/public/cpp/application:standalone",
+    "//mojo/public/cpp/bindings",
+    "//mojo/public/cpp/utility",
+  ]
+
+  sources = [
+    "echo_client.cc",
+  ]
+}
+
 executable("client_standalone") {
   output_name = "mybench_client_standalone"
 
