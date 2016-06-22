@@ -312,7 +312,9 @@ class ChildControllerImpl : public ChildController {
     uint32 out = 0;
     for (int i = 0; i < 100; ++i) {
       auto start = std::chrono::high_resolution_clock::now();
-      echo->EchoString(42, &out);
+      for (int j = 0; j < 10; ++j) {
+        echo->EchoString(42, &out);
+      }
       auto finish = std::chrono::high_resolution_clock::now();
       std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() << "ns\n";
     }
