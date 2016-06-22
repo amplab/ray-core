@@ -93,7 +93,7 @@ class EchoClientApp : public ApplicationImplBase {
     // MOJO_CHECK(echo->EchoString("hello", &out));
     // MOJO_LOG(INFO) << "Got response: " << out;
 
-    Terminate(MOJO_RESULT_OK);
+    // // Terminate(MOJO_RESULT_OK);
   }
 };
 
