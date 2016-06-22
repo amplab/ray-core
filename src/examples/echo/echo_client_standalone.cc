@@ -65,6 +65,14 @@ using mojo::util::RefPtr;
 namespace mojo {
 namespace examples {
 
+class ResponseNotifier {
+ public:
+  ResponseNotifier() {};
+  void Run(const mojo::String& value) const {
+    LOG(INFO) << "***** Response: " << value.get().c_str();
+  }
+};
+
 class EchoClientApp : public ApplicationImplBase {
  public:
   void OnInitialize() override {
