@@ -68,8 +68,7 @@ namespace examples {
 class ResponseNotifier {
   std::chrono::time_point start_;
  public:
-  ResponseNotifier() {};
-  void set_start(std::chrono::time_point start) { start_ = start; }
+  ResponseNotifier() { start_ = std::chrono::high_resolution_clock::now(); }
   void Run(const mojo::String& value) const {
     auto stop = std::chrono::high_resolution_clock::now();
     std::cout << "async: " << std::chrono::duration_cast<std::chrono::nanoseconds>(stop-start_).count() << "ns\n";
@@ -85,9 +84,7 @@ class EchoClientApp : public ApplicationImplBase {
     mojo::examples::EchoPtr echo2;
     ConnectToService(shell(), "mojo:echo_server", GetProxy(&echo2));
     for (int i = 0; i < 100; ++i) {
-      ResponseNotifier notifier;
-      notifier.set_start(std::chrono::high_resolution_clock::now());
-      echo2->EchoString("hello world", notifier);
+      echo2->EchoString("hello world", ResponseNotifier());
     }
 
     std::cout << "XXX done" << std::endl;
