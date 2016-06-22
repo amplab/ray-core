@@ -331,10 +331,10 @@ class ChildControllerImpl : public ChildController {
       std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() << "ns\n";
     }
     std::cout << "result: " << out << std::endl;
-    EchoPtr echo;
-    ConnectToService(echo_client_app.shell(), "mojo:echo_server", GetProxy(&echo));
+    EchoPtr echo2;
+    ConnectToService(echo_client_app.shell(), "mojo:echo_server", GetProxy(&echo2));
     for (int i = 0; i < 100; ++i) {
-      echo_->EchoString("hello world", ResponseNotifier());
+      echo2->EchoString("hello world", ResponseNotifier());
     }
   }
 
