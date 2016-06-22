@@ -14,6 +14,7 @@ group("portable_examples") {
     "//examples/apptest",
     "//examples/content_handler_demo",
     "//examples/echo",
+    "//examples/mybench",
     "//examples/echo_terminal",
     "//examples/forwarding_content_handler",
     "//examples/hello_mojo",
