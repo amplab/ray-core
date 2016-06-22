@@ -80,7 +80,7 @@ class EchoClientApp : public ApplicationImplBase {
     // ConnectToService(shell(), "mojo:echo_server", GetSynchronousProxy(&echo));
 
     mojo::examples::EchoPtr echo2;
-    ConnectToService(echo_client_app.shell(), "mojo:echo_server", GetProxy(&echo2));
+    ConnectToService(shell(), "mojo:echo_server", GetProxy(&echo2));
     for (int i = 0; i < 100; ++i) {
       echo2->EchoString("hello world", ResponseNotifier());
     }
