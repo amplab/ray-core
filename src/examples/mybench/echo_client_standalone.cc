@@ -308,7 +308,7 @@ class ChildControllerImpl : public ChildController {
     std::unique_ptr<base::MessageLoop> loop(new base::MessageLoop(mojo::common::MessagePumpMojo::Create()));
     echo_client_app.Bind(application_request.Pass());
     loop->Run();
-    mojo::ConnectToService(echo_client_app.shell(), "mojo:echo_server", mojo::GetSynchronousProxy(&echo));
+    mojo::ConnectToService(echo_client_app.shell(), "mojo:mybench_server", mojo::GetSynchronousProxy(&echo));
     uint32 out = 0;
     for (int i = 0; i < 100; ++i) {
       auto start = std::chrono::high_resolution_clock::now();
