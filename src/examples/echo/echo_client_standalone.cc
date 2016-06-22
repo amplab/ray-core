@@ -318,9 +318,7 @@ class ChildControllerImpl : public ChildController {
     mojo::String out = "yo!";
     for (int i = 0; i < 100; ++i) {
       auto start = std::chrono::high_resolution_clock::now();
-      for (int i = 0; i < 10; ++i) {
-        MOJO_CHECK(echo->EchoString("hello", &out));
-      }
+      echo->EchoString("hello", &out);
       auto finish = std::chrono::high_resolution_clock::now();
       std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() << "ns\n";
     }
