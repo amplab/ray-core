@@ -47,6 +47,7 @@
 #include <iostream>
 #include <chrono>
 #include "examples/echo/echo.mojom-sync.h"
+#include "examples/echo/echo.mojom.h"
 #include "mojo/public/cpp/application/application_impl_base.h"
 #include "mojo/public/cpp/application/connect.h"
 #include "mojo/public/cpp/application/run_application.h"
@@ -85,9 +86,9 @@ namespace shell {
 namespace {
 
 class ResponseNotifier {
-  ResponseNotifier() {};
  public:
-  void Run(const String& value) const {
+  ResponseNotifier() {};
+  void Run(const mojo::String& value) const {
     LOG(INFO) << "***** Response: " << value.get().c_str();
   }
 };
