@@ -66,7 +66,7 @@ namespace mojo {
 namespace examples {
 
 class ResponseNotifier {
-  std::chrono::time_point start_;
+  std::chrono::high_resolution_clock::time_point start_;
  public:
   ResponseNotifier() : start_(std::chrono::high_resolution_clock::now()) {}
   void Run(const mojo::String& value) const {
