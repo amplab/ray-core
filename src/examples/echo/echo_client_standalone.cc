@@ -45,6 +45,7 @@
 #include "shell/native_application_support.h"
 
 #include <iostream>
+#include <chrono>
 #include "examples/echo/echo.mojom-sync.h"
 #include "mojo/public/cpp/application/application_impl_base.h"
 #include "mojo/public/cpp/application/connect.h"
@@ -315,7 +316,12 @@ class ChildControllerImpl : public ChildController {
     loop->Run();
     mojo::ConnectToService(echo_client_app.shell(), "mojo:echo_server", mojo::GetSynchronousProxy(&echo));
     mojo::String out = "yo!";
-    MOJO_CHECK(echo->EchoString("hello", &out));
+    for (int i = 0; i < 100; ++i) {
+      auto start = std::chrono::high_resolution_clock::now();
+      MOJO_CHECK(echo->EchoString("hello", &out));
+      auto finish = std::chrono::high_resolution_clock::now();
+      std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() << "ns\n";
+    }
     std::cout << "result: " << out << std::endl;
   }
 
@@ -333,6 +339,9 @@ class ChildControllerImpl : public ChildController {
 
 }  // namespace
 }  // namespace shell
+
+// usage: ./mojo_shell --enable-multiprocess echo_client.mojo
+// usage: ./echo_client_standalone --child_connection_id=<connection id>
 
 int main(int argc, char** argv) {
   base::AtExitManager at_exit;
