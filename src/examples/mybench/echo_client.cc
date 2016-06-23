@@ -27,7 +27,7 @@ class ResponsePrinter {
 class EchoClientApp : public ApplicationImplBase {
  public:
   void OnInitialize() override {
-    ConnectToService(shell(), "mojo:echo_server", GetProxy(&echo_));
+    ConnectToService(shell(), "mojo:mybench_server", GetProxy(&echo_));
     auto start = std::chrono::high_resolution_clock::now();
     auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(start.time_since_epoch()).count();
     echo_->EchoString(nanos, ResponsePrinter());
