@@ -5,7 +5,7 @@
 #include <iostream>
 #include <chrono>
 #include "base/logging.h"
-#include "examples/echo/echo.mojom.h"
+#include "examples/mybench/echo.mojom.h"
 #include "mojo/public/c/system/main.h"
 #include "mojo/public/cpp/application/application_impl_base.h"
 #include "mojo/public/cpp/application/connect.h"
