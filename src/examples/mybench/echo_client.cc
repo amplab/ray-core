@@ -28,9 +28,11 @@ class EchoClientApp : public ApplicationImplBase {
  public:
   void OnInitialize() override {
     ConnectToService(shell(), "mojo:mybench_server", GetProxy(&echo_));
-    auto start = std::chrono::high_resolution_clock::now();
-    auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(start.time_since_epoch()).count();
-    echo_->EchoString(nanos, ResponsePrinter());
+    for (int i = 0; i < 100; ++i) {
+      auto start = std::chrono::high_resolution_clock::now();
+      auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(start.time_since_epoch()).count();
+      echo_->EchoString(nanos, ResponsePrinter());
+    }
   }
 
  private:
