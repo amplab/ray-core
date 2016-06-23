@@ -1,0 +1,6 @@
+module mojo.apps;
+
+[ServiceName="mojo::apps::ObjStore"]
+interface ObjStore {
+  BuildObject(int64 object_id, int64 size) => (handle<shared_buffer> buffer);
+};

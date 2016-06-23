@@ -17,6 +17,7 @@ group("apps") {
   deps = [
     ":portable_apps",
     "//apps/benchmark",
+    "//apps//objstore",
     "//apps/benchmark:apptests",
   ]
 }
