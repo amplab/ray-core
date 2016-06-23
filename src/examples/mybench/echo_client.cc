@@ -27,7 +27,7 @@ class EchoClientApp : public ApplicationImplBase {
   void OnInitialize() override {
     ConnectToService(shell(), "mojo:echo_server", GetProxy(&echo_));
     auto start = std::chrono::high_resolution_clock::now();
-    auto nanos = duration_cast<nanoseconds>(start.time_since_epoch()).count();
+    auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(start.time_since_epoch()).count();
     echo_->EchoString(nanos, ResponsePrinter());
   }
 
