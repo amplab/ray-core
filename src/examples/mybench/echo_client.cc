@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <iostream>
+#include <chrono>
 #include "base/logging.h"
 #include "examples/echo/echo.mojom.h"
 #include "mojo/public/c/system/main.h"
