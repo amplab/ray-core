@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <thread>
 #include "base/logging.h"
 #include "examples/mybench/echo.mojom.h"
 #include "mojo/public/c/system/main.h"
@@ -28,6 +29,9 @@ class EchoClientApp : public ApplicationImplBase {
  public:
   void OnInitialize() override {
     ConnectToService(shell(), "mojo:mybench_server", GetProxy(&echo_));
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    
     for (int i = 0; i < 100; ++i) {
       auto start = std::chrono::high_resolution_clock::now();
       auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(start.time_since_epoch()).count();
