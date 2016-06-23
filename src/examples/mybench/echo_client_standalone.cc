@@ -367,6 +367,11 @@ int main(int argc, char** argv) {
         shell::ChildControllerImpl::Init(&app_context, child_connection_id,
                                          unblocker);
       });
+  app_context.controller_runner()->PostTask(
+      [&app_context, &child_connection_id, &unblocker]() {
+        shell::ChildControllerImpl::Init(&app_context, child_connection_id,
+                                         unblocker);
+      });
   // This will block, then run whatever the controller wants.
   blocker.Block();
 
