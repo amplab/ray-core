@@ -19,7 +19,7 @@ class ResponsePrinter {
  public:
   void Run(const uint64& value) const {
     auto stop = std::chrono::high_resolution_clock::now();
-    auto nanos = duration_cast<nanoseconds>(start.time_since_epoch()).count();
+    auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(stop.time_since_epoch()).count();
     std::cout << nanos - value << " ns" << std::endl;
   }
 };
