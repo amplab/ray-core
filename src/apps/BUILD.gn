@@ -18,6 +18,7 @@ group("apps") {
     ":portable_apps",
     "//apps/benchmark",
     "//apps//objstore",
+    "//apps/rayclient:raylib",
     "//apps/benchmark:apptests",
   ]
 }
