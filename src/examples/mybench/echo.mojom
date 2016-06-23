@@ -8,5 +8,5 @@ module mojo.examples;
 
 [ServiceName="mojo::examples::Echo"]
 interface Echo {
-  EchoString(uint32 value) => (uint32 value);
+  EchoString(uint64 value) => (uint64 value);
 };
