@@ -31,12 +31,21 @@ class EchoClientApp : public ApplicationImplBase {
     ConnectToService(shell(), "mojo:mybench_server", GetProxy(&echo_));
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    
-    for (int i = 0; i < 100; ++i) {
+
+    for (int i = 0; i < 1; ++i) {
       auto start = std::chrono::high_resolution_clock::now();
       auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(start.time_since_epoch()).count();
       echo_->EchoString(nanos, ResponsePrinter());
     }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+    for (int i = 0; i < 1; ++i) {
+      auto start = std::chrono::high_resolution_clock::now();
+      auto nanos = std::chrono::duration_cast<std::chrono::nanoseconds>(start.time_since_epoch()).count();
+      echo_->EchoString(nanos, ResponsePrinter());
+    }
+
   }
 
  private:
