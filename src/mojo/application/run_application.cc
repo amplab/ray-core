@@ -79,10 +79,10 @@ void TerminateApplication(MojoResult result) {
   // HandleWatcher is notified of the message loop's pending destruction, and
   // triggers connection errors.) I should think about this some more.
   DCHECK(base::MessageLoop::current());
-  if (!base::MessageLoop::current()->is_running()) {
-    DLOG(WARNING) << "TerminateApplication() with message loop not running";
-    return;
-  }
+  // if (!base::MessageLoop::current()->is_running()) {
+  //  DLOG(WARNING) << "TerminateApplication() with message loop not running";
+  //  return;
+  // }
   base::MessageLoop::current()->Quit();
 
   ResultHolder* result_holder = g_current_result_holder.Pointer()->Get();

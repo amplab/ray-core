@@ -3,6 +3,9 @@
 
 #include "app_context.h"
 #include "blocker.h"
+#include "apps/objstore/objstore.mojom-sync.h"
+#include "mojo/public/cpp/application/connect.h"
+#include "mojo/public/cpp/bindings/synchronous_interface_ptr.h"
 
 namespace mojo {
 namespace apps {
@@ -26,16 +29,18 @@ class ChildControllerImpl : public ChildController {
   // To be executed on the controller thread. Creates the |ChildController|,
   // etc.
   static void Init(AppContext* app_context,
-                   const std::string& child_connection_id,
-                   const Blocker::Unblocker& unblocker) {
+                   const std::string& child_connection_id) {
     DCHECK(app_context);
     DCHECK(!app_context->controller());
 
     scoped_ptr<ChildControllerImpl> impl(
-        new ChildControllerImpl(app_context, unblocker));
+        new ChildControllerImpl(app_context));
     // TODO(vtl): With C++14 lambda captures, we'll be able to avoid this
     // silliness.
     auto raw_impl = impl.get();
+
+    LOG(INFO) << "W" << std::endl;
+
     mojo::ScopedMessagePipeHandle host_message_pipe(
         mojo::embedder::ConnectToMaster(child_connection_id, [raw_impl]() {
           raw_impl->DidConnectToMaster();
@@ -43,7 +48,11 @@ class ChildControllerImpl : public ChildController {
     DCHECK(impl->channel_info_);
     impl->Bind(host_message_pipe.Pass());
 
+    LOG(INFO) << "X" << std::endl;
+
     app_context->set_controller(impl.Pass());
+
+    LOG(INFO) << "Initialization done" << std::endl;
   }
 
   void Bind(mojo::ScopedMessagePipeHandle handle) {
@@ -58,8 +67,7 @@ class ChildControllerImpl : public ChildController {
   void ExitNow(int32_t exit_code) override;
 
  private:
-  ChildControllerImpl(AppContext* app_context,
-                      const Blocker::Unblocker& unblocker);
+  ChildControllerImpl(AppContext* app_context);
 
   void OnConnectionError() {
     // A connection error means the connection to the shell is lost. This is not
@@ -71,7 +79,7 @@ class ChildControllerImpl : public ChildController {
   // Callback for |mojo::embedder::ConnectToMaster()|.
   void DidConnectToMaster() {
     DVLOG(2) << "ChildControllerImpl::DidCreateChannel()";
-    DCHECK(thread_checker_.CalledOnValidThread());
+    CHECK(thread_checker_.CalledOnValidThread());
   }
 
   static void StartAppOnMainThread(
@@ -86,13 +94,18 @@ class ChildControllerImpl : public ChildController {
     connect_app.Bind(application_request.Pass());
     loop->Run();
 
-    // mojo::SynchronousInterfacePtr<mojo::examples::Echo> echo;
-    // mojo::ConnectToService(echo_client_app.shell(), "mojo:objstore_server", mojo::GetSynchronousProxy(&echo));
+    LOG(INFO) << "done" << std::endl;
+
+
+    mojo::SynchronousInterfacePtr<mojo::apps::ObjStore> objstore;
+    mojo::ConnectToService(connect_app.shell(), "mojo:objstore_server", mojo::GetSynchronousProxy(&objstore));
+
+    LOG(INFO) << "done" << std::endl;
+
   }
 
   base::ThreadChecker thread_checker_;
   AppContext* const app_context_;
-  Blocker::Unblocker unblocker_;
   RefPtr<TaskRunner> mojo_task_runner_;
   StartAppCallback on_app_complete_;
 
@@ -102,10 +115,8 @@ class ChildControllerImpl : public ChildController {
   DISALLOW_COPY_AND_ASSIGN(ChildControllerImpl);
 };
 
-inline ChildControllerImpl::ChildControllerImpl(AppContext* app_context,
-                    const Blocker::Unblocker& unblocker)
+inline ChildControllerImpl::ChildControllerImpl(AppContext* app_context)
   : app_context_(app_context),
-    unblocker_(unblocker),
     mojo_task_runner_(MakeRefCounted<base_edk::PlatformTaskRunnerImpl>(
         base::ThreadTaskRunnerHandle::Get())),
     channel_info_(nullptr),

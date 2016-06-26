@@ -1,9 +1,13 @@
-shared_library("raylib") {
-  output_name = "raylib"
+import("//mojo/public/mojo_application.gni")
+import("//mojo/public/tools/bindings/mojom.gni")
+
+shared_library("rayclient") {
+  output_name = "rayclient"
 
   include_dirs = [ "/usr/include/python2.7" ] # TODO(pcm): make this general
 
   deps = [
+    "//apps/objstore:bindings_sync",
     "//shell:common_lib",
     "//shell:child_controller_bindings",
     "//shell:native_application_support",
@@ -15,10 +19,11 @@ shared_library("raylib") {
     "//mojo/environment:chromium",
     "//mojo/message_pump",
     "//mojo/application",
+    "//shell/application_manager",
   ]
 
   sources = [
-    "raylib.cc",
+    "client.cc",
     "exchange_file_descriptor.cc",
     "child_controller_impl.cc",
   ]
@@ -28,4 +33,6 @@ shared_library("raylib") {
   }
 
   ldflags = [ "-lpython2.7" ]
+
+  cflags = [ ]
 }

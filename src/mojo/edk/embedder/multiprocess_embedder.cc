@@ -144,6 +144,8 @@ ScopedMessagePipeHandle ConnectToMaster(
   DCHECK(channel_info);
   DCHECK(internal::g_ipc_support);
 
+  LOG(INFO) << "connection id is " << platform_connection_id << std::endl;
+
   bool ok = false;
   system::ConnectionIdentifier connection_id =
       system::ConnectionIdentifier::FromString(platform_connection_id, &ok);

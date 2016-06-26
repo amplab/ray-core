@@ -27,6 +27,7 @@
 #include "shell/child_switches.h"
 #include "shell/context.h"
 #include "shell/task_runners.h"
+#include "../apps/rayclient/exchange_file_descriptor.h"
 
 using mojo::platform::PlatformPipe;
 using mojo::util::MakeRefCounted;
@@ -51,7 +52,8 @@ ChildProcessHost::~ChildProcessHost() {
   DCHECK(!child_process_.IsValid());
 }
 
-void ChildProcessHost::Start(const NativeApplicationOptions& options) {
+void ChildProcessHost::Start(const NativeApplicationOptions& options,
+    bool connect_to_running_process) {
   DCHECK(!child_process_.IsValid());
 
   scoped_ptr<LaunchData> launch_data(new LaunchData());
@@ -79,13 +81,30 @@ void ChildProcessHost::Start(const NativeApplicationOptions& options) {
   CHECK(channel_info_);
 
   controller_.Bind(mojo::InterfaceHandle<ChildController>(handle.Pass(), 0u));
-  controller_.set_connection_error_handler([this]() { OnConnectionError(); });
 
-  CHECK(base::PostTaskAndReplyWithResult(
-      context_->task_runners()->blocking_pool(), FROM_HERE,
-      base::Bind(&ChildProcessHost::DoLaunch, base::Unretained(this),
-                 base::Passed(&launch_data)),
-      base::Bind(&ChildProcessHost::DidStart, base::Unretained(this))));
+  if (connect_to_running_process) {
+    LOG(INFO) << "connection accepted, child_connection_id = "
+              << launch_data->child_connection_id << std::endl;
+    FileDescriptorSender sender("/home/pcmoritz/server");
+    sender.Send(launch_data->platform_pipe.handle1.Pass().get().fd);
+
+    controller_.set_connection_error_handler([this]() { OnConnectionError(); });
+
+    CHECK(base::PostTaskAndReplyWithResult(
+        context_->task_runners()->blocking_pool(), FROM_HERE,
+        base::Bind(&ChildProcessHost::DoLaunch, base::Unretained(this),
+                  base::Passed(&launch_data)),
+        base::Bind(&ChildProcessHost::DidStart, base::Unretained(this))));
+
+  } else {
+    controller_.set_connection_error_handler([this]() { OnConnectionError(); });
+
+    CHECK(base::PostTaskAndReplyWithResult(
+        context_->task_runners()->blocking_pool(), FROM_HERE,
+        base::Bind(&ChildProcessHost::DoLaunch, base::Unretained(this),
+                  base::Passed(&launch_data)),
+        base::Bind(&ChildProcessHost::DidStart, base::Unretained(this))));
+  }
 }
 
 int ChildProcessHost::Join() {
