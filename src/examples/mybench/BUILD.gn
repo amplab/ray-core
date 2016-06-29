@@ -7,9 +7,9 @@ import("//mojo/public/tools/bindings/mojom.gni")
 
 group("mybench") {
   deps = [
-    ":client_standalone",
     ":server",
-    ":client"
+    ":client",
+    ":rayclient"
   ]
 }
 
@@ -26,31 +26,6 @@ mojo_native_application("client") {
 
   sources = [
     "echo_client.cc",
-  ]
-}
-
-executable("client_standalone") {
-  output_name = "mybench_client_standalone"
-
-  deps = [
-    ":bindings",
-    ":bindings_sync",
-    "//shell:common_lib",
-    "//shell:child_controller_bindings",
-    "//shell:native_application_support",
-    "//base",
-    "//base/allocator",
-    "//build/config/sanitizers:deps",
-    "//mojo/edk/base_edk",
-    "//mojo/edk/system",
-    "//mojo/environment:chromium",
-    "//mojo/message_pump",
-    "//mojo/application",
-  ]
-
-  sources = [
-    "echo_client_standalone.cc",
-    "exchange_file_descriptor.cc",
   ]
 }
 
@@ -74,4 +49,38 @@ mojom("bindings") {
   sources = [
     "echo.mojom",
   ]
+}
+
+shared_library("rayclient") {
+  output_name = "rayclient"
+
+  include_dirs = [ "/usr/include/python2.7" ] # TODO(pcm): make this general
+
+  deps = [
+    ":bindings",
+    ":bindings_sync",
+    "//shell:common_lib",
+    "//shell:child_controller_bindings",
+    "//shell:native_application_support",
+    "//base",
+    "//base/allocator",
+    "//build/config/sanitizers:deps",
+    "//mojo/edk/base_edk",
+    "//mojo/edk/system",
+    "//mojo/environment:chromium",
+    "//mojo/message_pump",
+    "//mojo/application",
+  ]
+
+  sources = [
+    "rayclient.cc",
+    "echo_client_standalone.cc",
+    "exchange_file_descriptor.cc",
+  ]
+
+  if (!is_win) {
+    configs -= [ "//build/config/gcc:symbol_visibility_hidden" ]
+  }
+
+  ldflags = [ "-lpython2.7" ]
 }

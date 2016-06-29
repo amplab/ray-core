@@ -347,18 +347,8 @@ class ChildControllerImpl : public ChildController {
 // usage: ./mojo_shell --enable-multiprocess echo_client.mojo
 // usage: ./echo_client_standalone --child_connection_id=<connection id>
 
-int main(int argc, char** argv) {
-  base::AtExitManager at_exit;
-  base::CommandLine::Init(argc, argv);
-  const base::CommandLine& command_line =
-      *base::CommandLine::ForCurrentProcess();
-
-  std::string child_connection_id =
-    command_line.GetSwitchValueASCII("child_connection_id");
-
-  shell::InitializeLogging();
-
-  CHECK(!child_connection_id.empty());
+std::thread start_rayclient(const char* c_child_connection_id, mojo::SynchronousInterfacePtr<mojo::examples::Echo>* result) {
+  std::string child_connection_id(c_child_connection_id);
 
   std::thread thread([child_connection_id](){
     FileDescriptorReceiver receiver("/home/pcmoritz/server");
@@ -377,22 +367,21 @@ int main(int argc, char** argv) {
                                          unblocker);
       });
     // This will block, then run whatever the controller wants.
+    std::cout << "waiting" << std::endl;
+
     blocker.Block();
     app_context.Shutdown();
   });
 
   std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
-  mojo::SynchronousInterfacePtr<mojo::examples::Echo> echo =
-    mojo::SynchronousInterfacePtr<mojo::examples::Echo>::Create(global_echo_handle.Pass());
+  *result = mojo::SynchronousInterfacePtr<mojo::examples::Echo>::Create(global_echo_handle.Pass());
 
   uint32 out = 0;
 
-  echo->EchoString(42, &out);
+  (*result)->EchoString(42, &out);
 
   LOG(INFO) << "result is " << out << std::endl;
 
-  thread.join();
-
-  return 0;
+  return thread;
 }
