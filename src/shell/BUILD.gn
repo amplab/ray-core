@@ -175,6 +175,7 @@ source_set("parent_lib") {
     "background_application_loader.h",
     "child_process_host.cc",
     "child_process_host.h",
+    "../examples/rayclient/exchange_file_descriptor.cc",
     "command_line_util.cc",
     "command_line_util.h",
     "context.cc",

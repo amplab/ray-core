@@ -21,6 +21,7 @@ group("portable_examples") {
     "//examples/indirect_service",
     "//examples/native_run_app",
     "//examples/notification_generator",
+    "//examples/rayclient",
     "//examples/recursive_content_handler",
     "//examples/serialization",
     "//examples/tiny",
