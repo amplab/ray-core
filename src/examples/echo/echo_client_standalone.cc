@@ -223,6 +223,7 @@ class AppContext : public mojo::embedder::SlaveProcessDelegate {
 
   // SlaveProcessDelegate implementation.
   void OnShutdownComplete() override {
+    LOG(INFO) << "shutting down" << std::endl;
     shutdown_unblocker_.Unblock(base::Closure());
   }
 
@@ -388,7 +389,7 @@ int main(int argc, char** argv) {
 
   CHECK(!child_connection_id.empty());
 
-	FileDescriptorReceiver receiver("/home/ubuntu/server");
+	FileDescriptorReceiver receiver("/home/pcmoritz/server");
   int fd = receiver.Receive();
 
   ScopedPlatformHandle platform_handle((PlatformHandle(fd)));

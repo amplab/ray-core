@@ -54,6 +54,9 @@
 #include "mojo/public/cpp/bindings/synchronous_interface_ptr.h"
 #include "exchange_file_descriptor.h"
 
+#include <chrono>
+#include <thread>
+
 using mojo::platform::PlatformHandle;
 using mojo::platform::PlatformHandleWatcher;
 using mojo::platform::ScopedPlatformHandle;
@@ -62,13 +65,28 @@ using mojo::util::MakeRefCounted;
 using mojo::util::MakeUnique;
 using mojo::util::RefPtr;
 
+std::unique_ptr<base::MessageLoop> global_loop;
+
+mojo::InterfaceHandle<mojo::examples::Echo> global_echo_handle;
+
 namespace mojo {
 namespace examples {
 
 class EchoClientApp : public ApplicationImplBase {
  public:
   void OnInitialize() override {
-    Terminate(MOJO_RESULT_OK);
+    mojo::SynchronousInterfacePtr<mojo::examples::Echo> echo;
+    mojo::ConnectToService(shell(), "mojo:mybench_server", mojo::GetSynchronousProxy(&echo));
+    uint32 out = 0;
+    for (int i = 0; i < 100; ++i) {
+      auto start = std::chrono::high_resolution_clock::now();
+      for (int j = 0; j < 10; ++j) {
+        echo->EchoString(42, &out);
+      }
+      auto finish = std::chrono::high_resolution_clock::now();
+      std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() << "ns\n";
+    }
+    global_echo_handle = echo.PassInterfaceHandle();
   }
 };
 
@@ -111,6 +129,7 @@ class Blocker {
     event_.Wait();
     if (!run_after_.is_null())
       run_after_.Run();
+    LOG(INFO) << "after running" << std::endl;
   }
 
   Unblocker GetUnblocker() { return Unblocker(this); }
@@ -304,21 +323,10 @@ class ChildControllerImpl : public ChildController {
              << " out of process";
 
     mojo::examples::EchoClientApp echo_client_app;
-    mojo::SynchronousInterfacePtr<mojo::examples::Echo> echo;
     std::unique_ptr<base::MessageLoop> loop(new base::MessageLoop(mojo::common::MessagePumpMojo::Create()));
     echo_client_app.Bind(application_request.Pass());
     loop->Run();
-    mojo::ConnectToService(echo_client_app.shell(), "mojo:mybench_server", mojo::GetSynchronousProxy(&echo));
-    uint32 out = 0;
-    for (int i = 0; i < 100; ++i) {
-      auto start = std::chrono::high_resolution_clock::now();
-      for (int j = 0; j < 10; ++j) {
-        echo->EchoString(42, &out);
-      }
-      auto finish = std::chrono::high_resolution_clock::now();
-      std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() << "ns\n";
-    }
-    std::cout << "result: " << out << std::endl;
+    global_loop = std::move(loop);
   }
 
   base::ThreadChecker thread_checker_;
@@ -352,25 +360,39 @@ int main(int argc, char** argv) {
 
   CHECK(!child_connection_id.empty());
 
-	FileDescriptorReceiver receiver("/home/ubuntu/server");
-  int fd = receiver.Receive();
+  std::thread thread([child_connection_id](){
+    FileDescriptorReceiver receiver("/home/pcmoritz/server");
+    int fd = receiver.Receive();
 
-  ScopedPlatformHandle platform_handle((PlatformHandle(fd)));
-  shell::AppContext app_context;
-  app_context.Init(platform_handle.Pass());
+    ScopedPlatformHandle platform_handle((PlatformHandle(fd)));
+    shell::AppContext app_context;
+    app_context.Init(platform_handle.Pass());
 
-  shell::Blocker blocker;
-  // TODO(vtl): With C++14 lambda captures, this can be made nicer.
-  const shell::Blocker::Unblocker unblocker = blocker.GetUnblocker();
-  app_context.controller_runner()->PostTask(
+    shell::Blocker blocker;
+    // TODO(vtl): With C++14 lambda captures, this can be made nicer.
+    const shell::Blocker::Unblocker unblocker = blocker.GetUnblocker();
+    app_context.controller_runner()->PostTask(
       [&app_context, &child_connection_id, &unblocker]() {
         shell::ChildControllerImpl::Init(&app_context, child_connection_id,
                                          unblocker);
       });
-  // This will block, then run whatever the controller wants.
-  blocker.Block();
+    // This will block, then run whatever the controller wants.
+    blocker.Block();
+    app_context.Shutdown();
+  });
 
-  app_context.Shutdown();
+  std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
+  mojo::SynchronousInterfacePtr<mojo::examples::Echo> echo =
+    mojo::SynchronousInterfacePtr<mojo::examples::Echo>::Create(global_echo_handle.Pass());
+
+  uint32 out = 0;
+
+  echo->EchoString(42, &out);
+
+  LOG(INFO) << "result is " << out << std::endl;
+
+  thread.join();
 
   return 0;
 }
