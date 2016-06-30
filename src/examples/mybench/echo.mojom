@@ -6,7 +6,14 @@
  JavaPackage="org.chromium.mojo.examples.echo"]
 module mojo.examples;
 
+struct ObjectInfo {
+  int64 ms_since_epoch;
+  uint64 num_bytes;
+};
+
 [ServiceName="mojo::examples::Echo"]
 interface Echo {
   EchoString(uint32 value) => (uint32 value);
+  BuildObject(int64 object_id, uint64 size) => (handle<shared_buffer> buffer);
+  ListObjects() => (array<ObjectInfo> info);
 };

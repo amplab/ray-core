@@ -3,8 +3,10 @@
 // found in the LICENSE file.
 
 #include <memory>
+#include <iostream>
 
-#include "examples/echo/echo.mojom.h"
+#include "base/time/time.h"
+#include "examples/mybench/echo.mojom.h"
 #include "mojo/common/binding_set.h"
 #include "mojo/public/c/system/main.h"
 #include "mojo/public/cpp/application/application_impl_base.h"
@@ -31,10 +33,34 @@ namespace examples {
 // It is used by all three server variants.
 class EchoImpl : public Echo {
  public:
-  void EchoString(const mojo::String& value,
-                  const Callback<void(mojo::String)>& callback) override {
+  void EchoString(uint32 value,
+                  const Callback<void(uint32)>& callback) override {
     callback.Run(value);
   }
+  void BuildObject(int64 object_id, uint64 size,
+                   const mojo::Callback<void(mojo::ScopedSharedBufferHandle)>& callback) override {
+    MOJO_CHECK(size >= 0);
+    mojo::ScopedSharedBufferHandle handle;
+    MOJO_CHECK(MOJO_RESULT_OK == mojo::CreateSharedBuffer(nullptr, size, &handle));
+    MOJO_CHECK(handle.is_valid());
+    mojo::ScopedSharedBufferHandle handle_copy;
+    mojo::DuplicateBuffer(handle.get(), nullptr, &handle_copy);
+    memory_handles_.push_back(handle.Pass());
+    // base::TimeTicks now = base::TimeTicks::Now();
+    callback.Run(handle_copy.Pass());
+  }
+  void ListObjects(const ListObjectsCallback& callback) override {
+    auto object_info = mojo::Array<mojo::examples::ObjectInfoPtr>::New(0);
+    for (size_t i = 0; i < memory_handles_.size(); ++i) {
+      auto elem = mojo::examples::ObjectInfo::New();
+      elem->ms_since_epoch = 42;
+      elem->num_bytes = 100u;
+      object_info.push_back(elem.Pass());
+    }
+    callback.Run(object_info.Pass());
+  }
+private:
+  std::vector<mojo::ScopedSharedBufferHandle> memory_handles_;
 };
 
 // StrongBindingEchoImpl inherits from EchoImpl and adds the StrongBinding<>

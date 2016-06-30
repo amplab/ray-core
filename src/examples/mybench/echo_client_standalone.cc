@@ -6,6 +6,9 @@
 
 #include <memory>
 
+#include <mutex>
+#include <condition_variable>
+
 #include "base/at_exit.h"
 #include "base/bind.h"
 #include "base/callback_helpers.h"
@@ -67,6 +70,8 @@ using mojo::util::RefPtr;
 
 std::unique_ptr<base::MessageLoop> global_loop;
 
+std::condition_variable app_started; // signal when app was started
+std::mutex app_started_mutex; // lock for above condition
 mojo::InterfaceHandle<mojo::examples::Echo> global_echo_handle;
 
 namespace mojo {
@@ -87,6 +92,7 @@ class EchoClientApp : public ApplicationImplBase {
       std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(finish-start).count() << "ns\n";
     }
     global_echo_handle = echo.PassInterfaceHandle();
+    app_started.notify_all();
   }
 };
 
@@ -373,7 +379,10 @@ std::thread start_rayclient(const char* c_child_connection_id, mojo::Synchronous
     app_context.Shutdown();
   });
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+  // std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
+  std::unique_lock<std::mutex> lock(app_started_mutex);
+  app_started.wait(lock);
 
   *result = mojo::SynchronousInterfacePtr<mojo::examples::Echo>::Create(global_echo_handle.Pass());
 
