@@ -389,7 +389,7 @@ int main(int argc, char** argv) {
 
   CHECK(!child_connection_id.empty());
 
-	FileDescriptorReceiver receiver("/home/pcmoritz/server");
+	FileDescriptorReceiver receiver("/home/ubuntu/server");
   int fd = receiver.Receive();
 
   ScopedPlatformHandle platform_handle((PlatformHandle(fd)));

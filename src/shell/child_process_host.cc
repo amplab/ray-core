@@ -89,7 +89,7 @@ void ChildProcessHost::Start(const NativeApplicationOptions& options) {
   controller_.Bind(mojo::InterfaceHandle<ChildController>(handle.Pass(), 0u));
   if(answer == 1) {
     std::cout << launch_data->child_connection_id << std::endl;
-    FileDescriptorSender sender("/home/pcmoritz/server");
+    FileDescriptorSender sender("/home/ubuntu/server");
     sender.Send(launch_data->platform_pipe.handle1.Pass().get().fd);
     external_process_ = true;
   } else {
