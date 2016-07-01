@@ -6,17 +6,12 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include <iostream>
+#include "mojo/public/cpp/environment/logging.h"
 
-#define CHECK(cond, msg) \
-  if (!(cond)) { \
-    std::cerr << msg << std::endl; \
-    exit(1); \
-  }
 
 FileDescriptorSender::FileDescriptorSender(const std::string& address) {
   socket_ = socket(PF_UNIX, SOCK_STREAM, 0);
-  CHECK(socket_ != -1, "error creating socket");
+  MOJO_CHECK(socket_ != -1) << "error creating socket";
   struct sockaddr_un addr;
   memset(&addr, 0, sizeof(struct sockaddr_un));
   addr.sun_family = AF_LOCAL;
@@ -24,8 +19,9 @@ FileDescriptorSender::FileDescriptorSender(const std::string& address) {
   addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
   unlink(addr.sun_path);
   size_t len = strlen(addr.sun_path) + sizeof(addr.sun_family);
-  CHECK(bind(socket_, (struct sockaddr *)&addr, len) != -1, "error binding socket");
-  CHECK(listen(socket_, 5) != -1, "error listening on socket");
+  MOJO_CHECK(bind(socket_, (struct sockaddr *)&addr, len) != -1)
+    << "error binding socket";
+  MOJO_CHECK(listen(socket_, 5) != -1) << "error listening on socket";
 }
 
 FileDescriptorSender::~FileDescriptorSender() {
@@ -66,13 +62,13 @@ bool FileDescriptorSender::Send(int file_descriptor) {
 
 FileDescriptorReceiver::FileDescriptorReceiver(const std::string& address) {
   socket_ = socket(PF_UNIX, SOCK_STREAM, 0);
-  CHECK(socket_ != -1, "error creating socket");
+  MOJO_CHECK(socket_ != -1) << "error creating socket";
   struct sockaddr_un addr;
   addr.sun_family = AF_LOCAL;
   strncpy(addr.sun_path, address.c_str(), sizeof(addr.sun_path));
   addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
   int r = connect(socket_, (struct sockaddr *)&addr, sizeof(addr));
-  CHECK(r != -1, "error connecting to socket");
+  MOJO_CHECK(r != -1) << "error connecting to socket";
 }
 
 FileDescriptorReceiver::~FileDescriptorReceiver() {
