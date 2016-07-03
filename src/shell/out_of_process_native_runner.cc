@@ -73,13 +73,17 @@ void OutOfProcessNativeRunner::Start(
   NativeApplicationOptions options = options_;
   if (Require32Bit(app_path))
     options.require_32_bit = true;
-  child_process_host_->Start(options);
+  connect_to_running_process_ =
+     app_path.BaseName() == base::FilePath("echo_client.mojo");
+  child_process_host_->Start(options, connect_to_running_process_);
 
-  // TODO(vtl): |app_path.AsUTF8Unsafe()| is unsafe.
-  child_process_host_->StartApp(
-      app_path.AsUTF8Unsafe(), application_request.Pass(),
-      base::Bind(&OutOfProcessNativeRunner::AppCompleted,
-                 base::Unretained(this)));
+  // if (!connect_to_running_process_) {
+    // TODO(vtl): |app_path.AsUTF8Unsafe()| is unsafe.
+    child_process_host_->StartApp(
+        app_path.AsUTF8Unsafe(), application_request.Pass(),
+        base::Bind(&OutOfProcessNativeRunner::AppCompleted,
+                   base::Unretained(this)));
+  // }
 }
 
 void OutOfProcessNativeRunner::AppCompleted(int32_t result) {

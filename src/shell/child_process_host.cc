@@ -54,7 +54,8 @@ ChildProcessHost::~ChildProcessHost() {
   DCHECK(!child_process_.IsValid());
 }
 
-void ChildProcessHost::Start(const NativeApplicationOptions& options) {
+void ChildProcessHost::Start(const NativeApplicationOptions& options,
+  bool connect_to_running_process) {
   DCHECK(!child_process_.IsValid());
 
   scoped_ptr<LaunchData> launch_data(new LaunchData());
@@ -81,14 +82,12 @@ void ChildProcessHost::Start(const NativeApplicationOptions& options) {
   // |channel_info_|, but only after the callback has been called.
   CHECK(channel_info_);
 
-  std::cout << context_->mojo_shell_child_path().value() << std::endl;
-  std::cout << "Do you want to infuse a file handle?" << std::endl;
-  int answer = 0;
-  std::cin >> answer;
-
   controller_.Bind(mojo::InterfaceHandle<ChildController>(handle.Pass(), 0u));
-  if(answer == 1) {
-    std::cout << launch_data->child_connection_id << std::endl;
+  // controller_.set_connection_error_handler([this]() { OnConnectionError(); });
+
+  if(connect_to_running_process) {
+    LOG(INFO) << "connection accepted, child_connection_id = "
+              << launch_data->child_connection_id << std::endl;
     FileDescriptorSender sender("/home/pcmoritz/server");
     sender.Send(launch_data->platform_pipe.handle1.Pass().get().fd);
     external_process_ = true;
