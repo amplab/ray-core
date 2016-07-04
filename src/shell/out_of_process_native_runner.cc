@@ -77,13 +77,11 @@ void OutOfProcessNativeRunner::Start(
     app_path.BaseName() == base::FilePath("librayclient.so");
   child_process_host_->Start(options, connect_to_running_process_);
 
-  if (!connect_to_running_process_) {
-    // TODO(vtl): |app_path.AsUTF8Unsafe()| is unsafe.
-    child_process_host_->StartApp(
-        app_path.AsUTF8Unsafe(), application_request.Pass(),
-        base::Bind(&OutOfProcessNativeRunner::AppCompleted,
-                   base::Unretained(this)));
-  }
+  // TODO(vtl): |app_path.AsUTF8Unsafe()| is unsafe.
+  child_process_host_->StartApp(
+      app_path.AsUTF8Unsafe(), application_request.Pass(),
+      base::Bind(&OutOfProcessNativeRunner::AppCompleted,
+                 base::Unretained(this)));
 }
 
 void OutOfProcessNativeRunner::AppCompleted(int32_t result) {

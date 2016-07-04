@@ -61,20 +61,51 @@ using mojo::util::MakeRefCounted;
 using mojo::util::MakeUnique;
 using mojo::util::RefPtr;
 
-namespace mojo {
-namespace examples {
-
-class EchoClientApp : public ApplicationImplBase {
- public:
-  void OnInitialize() override {
-  }
-};
-
-}  // namespace examples
-}  // namespace mojo
-
 namespace shell {
 namespace {
+
+/*! The ServiceConnectionApp runs in a separate thread in the client and
+    maintains a connection to the shell. It allows the client to connect
+    synchronously to services, one service per ServiceConnectionApp.
+    It allows the client to get InterfaceHandles to these services. These
+    handles can be transfered to any client thread.
+*/
+template<typename Service>
+class ServiceConnectionApp : public mojo::ApplicationImplBase {
+ public:
+  /*! Construct a new ServiceConnectionApp that will connect to a service.
+
+      \param service_name
+        The name of the service we want to connect to
+
+      \param notify_caller
+        Condition that will be triggered to notify
+        the calling thread that the connection to the service is established
+
+      \param service_handle
+        A pointer to an InterfaceHandle that is
+        owned by the calling thread
+  */
+  ServiceConnectionApp(const std::string& service_name,
+                           std::condition_variable* notify_caller,
+                           mojo::InterfaceHandle<Service>* service_handle)
+      : service_name_(service_name), notify_caller_(notify_caller),
+        service_handle_(service_handle) {}
+
+  void OnInitialize() override {
+    mojo::SynchronousInterfacePtr<Service> service;
+    mojo::ConnectToService(shell(), service_name_,
+                           mojo::GetSynchronousProxy(&service));
+    // pass handle to calling thread
+    *service_handle_ = service.PassInterfaceHandle();
+    notify_caller_->notify_all();
+    notify_caller_ = NULL;
+  }
+ private:
+  std::string service_name_;
+  std::condition_variable* notify_caller_;
+  mojo::InterfaceHandle<Service>* service_handle_;
+};
 
 // Blocker ---------------------------------------------------------------------
 
@@ -328,10 +359,11 @@ class ChildControllerImpl : public ChildController {
 }  // namespace
 }  // namespace shell
 
-void start_rayclient(const std::string& address, const std::string& child_connection_id) {
+template<typename Service>
+std::thread start_rayclient(const std::string& address, const std::string& child_connection_id, mojo::InterfaceHandle<Service>* service) {
   std::condition_variable app_started; // signal when app was started
   std::mutex app_started_mutex; // lock for above condition
-  std::thread thread([address, child_connection_id]() {
+  std::thread thread([address, child_connection_id, &app_started, service]() {
     FileDescriptorReceiver receiver(address);
     int fd = receiver.Receive(); // file descriptor to bootstrap the IPC from
 
@@ -342,10 +374,10 @@ void start_rayclient(const std::string& address, const std::string& child_connec
     shell::Blocker blocker;
     // TODO(vtl): With C++14 lambda captures, this can be made nicer.
     const shell::Blocker::Unblocker unblocker = blocker.GetUnblocker();
-    auto app_initializer = [](mojo::InterfaceRequest<mojo::Application> request) {
-      mojo::examples::EchoClientApp echo_client_app;
+    auto app_initializer = [&app_started, service](mojo::InterfaceRequest<mojo::Application> request) {
+      shell::ServiceConnectionApp<Service> connector_app(std::string("mojo:echo_server"), &app_started, service);
       base::MessageLoop loop((mojo::common::MessagePumpMojo::Create()));
-      echo_client_app.Bind(request.Pass());
+      connector_app.Bind(request.Pass());
       loop.Run();
     };
     app_context.controller_runner()->PostTask(
@@ -359,6 +391,7 @@ void start_rayclient(const std::string& address, const std::string& child_connec
     app_context.Shutdown();
   });
   std::unique_lock<std::mutex> lock(app_started_mutex);
-  // app_started.wait(lock);
-  thread.join();
+  app_started.wait(lock);
+  // thread.join();
+  return thread;
 }

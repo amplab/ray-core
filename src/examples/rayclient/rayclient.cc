@@ -1,13 +1,26 @@
+#include <iostream>
+
 #include <string>
+#include <thread>
 #include <Python.h>
 #include "base/at_exit.h"
 #include "base/command_line.h"
 #include "mojo/edk/util/make_unique.h"
 #include "shell/init.h"
+#include "mojo/public/cpp/bindings/synchronous_interface_ptr.h"
+#include "examples/echo/echo.mojom.h"
 
-void start_rayclient(const std::string& address, const std::string& child_connection_id);
+#include "client.cc"
 
 extern "C" {
+
+struct ray_client_state {
+  std::unique_ptr<base::AtExitManager> at_exit;
+  std::thread connector_app_thread;
+  mojo::InterfaceHandle<mojo::examples::Echo> echo_handle;
+};
+
+static ray_client_state global_state;
 
 static PyObject* connect(PyObject* self, PyObject* args) {
   const char* address;
@@ -15,28 +28,29 @@ static PyObject* connect(PyObject* self, PyObject* args) {
   if (!PyArg_ParseTuple(args, "ss", &address, &child_connection_id)) {
     return NULL;
   }
-  start_rayclient(std::string(address), std::string(child_connection_id));
+  global_state.at_exit = mojo::util::MakeUnique<base::AtExitManager>();
+  global_state.connector_app_thread =
+    start_rayclient<mojo::examples::Echo>(std::string(address),
+      std::string(child_connection_id),
+      &global_state.echo_handle);
+  auto echo = mojo::SynchronousInterfacePtr<mojo::examples::Echo>::Create(global_state.echo_handle.Pass());
+  mojo::String result;
+  echo->EchoString("hello", &result);
+  std::cout << "result is " << result << std::endl;
   Py_RETURN_NONE;
 }
 
-static PyMethodDef RayLibMethods[] = {
+static PyMethodDef RayClientMethods[] = {
   { "connect", connect, METH_VARARGS, "connect to the shell" },
   { NULL, NULL, 0, NULL }
 };
 
-struct ray_client_state {
-  std::unique_ptr<base::AtExitManager> at_exit;
-};
-
-static ray_client_state global_state;
-
 PyMODINIT_FUNC initlibrayclient(void) {
-  global_state.at_exit = mojo::util::MakeUnique<base::AtExitManager>();
   int argc = 1;
   const char* argv[] = { "rayclient", NULL };
   base::CommandLine::Init(argc, argv);
   shell::InitializeLogging();
-  Py_InitModule3("librayclient", RayLibMethods, "ray-core python client library");
+  Py_InitModule3("librayclient", RayClientMethods, "ray-core python client library");
 }
 
 }

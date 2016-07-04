@@ -4,6 +4,7 @@ shared_library("rayclient") {
   include_dirs = [ "/usr/include/python2.7" ] # TODO(pcm): make this general
 
   deps = [
+    "//examples/echo:bindings_sync",
     "//shell:common_lib",
     "//shell:child_controller_bindings",
     "//shell:native_application_support",
@@ -19,7 +20,7 @@ shared_library("rayclient") {
 
   sources = [
     "rayclient.cc",
-    "client.cc",
+#    "client.cc",
     "exchange_file_descriptor.cc",
   ]
 
