@@ -1,0 +1,26 @@
+group("client") {
+  deps = [
+    ":plasma"
+  ]
+}
+
+shared_library("plasma") {
+  output_name = "plasma"
+
+  include_dirs = [ "/usr/include/python2.7" ] # TODO(pcm): make this general
+
+  deps = [
+    "//plasma/service:bindings_sync",
+    "//ray/client"
+  ]
+
+  sources = [
+    "plasma.cc",
+  ]
+
+  if (!is_win) {
+    configs -= [ "//build/config/gcc:symbol_visibility_hidden" ]
+  }
+
+  ldflags = [ "-lpython2.7" ]
+}
