@@ -1,0 +1,22 @@
+static_library("client") {
+  output_name = "client"
+
+  deps = [
+    "//shell:common_lib",
+    "//shell:child_controller_bindings",
+    "//shell:native_application_support",
+    "//base",
+    "//base/allocator",
+    "//build/config/sanitizers:deps",
+    "//mojo/edk/base_edk",
+    "//mojo/edk/system",
+    "//mojo/environment:chromium",
+    "//mojo/message_pump",
+    "//mojo/application",
+  ]
+
+  sources = [
+    "client_context.cc",
+    "exchange_file_descriptor.cc",
+  ]
+}

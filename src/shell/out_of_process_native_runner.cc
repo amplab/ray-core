@@ -71,10 +71,11 @@ void OutOfProcessNativeRunner::Start(
   child_process_host_.reset(new ChildProcessHost(context_));
 
   NativeApplicationOptions options = options_;
-  if (Require32Bit(app_path))
+  if (false && Require32Bit(app_path))
     options.require_32_bit = true;
+  // TODO(pcm): The line below is repeated in application_manager.cc
   connect_to_running_process_ =
-    app_path.BaseName() == base::FilePath("librayclient.so");
+    app_path.BaseName().AsUTF8Unsafe().compare(0, 7, "worker{") == 0;
   child_process_host_->Start(options, connect_to_running_process_);
 
   // TODO(vtl): |app_path.AsUTF8Unsafe()| is unsafe.

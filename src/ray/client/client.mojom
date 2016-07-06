@@ -1,0 +1,6 @@
+module ray;
+
+[ServiceName="ray::Client"]
+interface Client {
+  // TODO(pcm): Add a method to shut down the client here
+};

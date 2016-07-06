@@ -27,7 +27,7 @@
 #include "shell/child_switches.h"
 #include "shell/context.h"
 #include "shell/task_runners.h"
-#include "../examples/rayclient/exchange_file_descriptor.h"
+#include "ray/client/exchange_file_descriptor.h"
 
 using mojo::platform::PlatformPipe;
 using mojo::util::MakeRefCounted;
