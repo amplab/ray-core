@@ -293,13 +293,13 @@ class ClientContext {
         The hash the shell allocated for this client connection
   */
   void ConnectToShell(const std::string& service_name,
-                      const std::string& address,
-                      const std::string& child_connection_id) {
+                      const std::string& address) {
     std::condition_variable app_started; // signal when app was started
     std::mutex app_started_mutex; // lock for above condition
-    std::thread thread([service_name, address, child_connection_id, &app_started, this]() {
-      FileDescriptorReceiver receiver(address);
-      int fd = receiver.Receive(); // file descriptor to bootstrap the IPC from
+    std::thread thread([service_name, address, &app_started, this]() {
+      std::string child_connection_id;
+      ray::FileDescriptorReceiver receiver(address);
+      int fd = receiver.Receive(child_connection_id); // file descriptor to bootstrap the IPC from
 
       mojo::platform::ScopedPlatformHandle platform_handle((mojo::platform::PlatformHandle(fd)));
       shell::AppContext app_context;

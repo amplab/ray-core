@@ -10,8 +10,8 @@ shared_library("plasma") {
   include_dirs = [ "/usr/include/python2.7" ] # TODO(pcm): make this general
 
   deps = [
-    "//plasma/service:bindings_sync",
-    "//ray/client"
+    "//ray/client",
+    "//plasma/service:plasma"
   ]
 
   sources = [

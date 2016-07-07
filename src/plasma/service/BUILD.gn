@@ -29,6 +29,11 @@ static_library("plasma") {
   sources = [
     "library.cc",
     "buffer.cc",
+    "plasma_interface.cc",
+  ]
+
+  deps = [
+    ":bindings_sync"
   ]
 }
 

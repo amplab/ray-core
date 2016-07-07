@@ -70,9 +70,14 @@ const char kTraceStartupOutputName[] = "trace-startup-output-name";
 // the first maps 'a' to 'b' and the second 'c' to 'd'.
 const char kURLMappings[] = "url-mappings";
 
+// Specifies the socket address to use for connecting external processes to
+// the shell. Should be a valid socket address. If you change the value here,
+// you also need to change it in child_process_host.cc!
+const char kExternalConnectionAddress[] = "external-connection-address";
+
 // Switches valid for the main process (i.e., that the user may pass in).
 const char* const kSwitchArray[] = {
-    kArgsFor, kContentHandlers, kCPUProfile, kDisableCache,
+    kArgsFor, kContentHandlers, kCPUProfile, kDisableCache, kExternalConnectionAddress,
     kDontDeleteOnDownload, kEnableMultiprocess, kForceInProcess,
     kForceOfflineByDefault, kHelp, kMapOrigin, kOrigin, kTraceStartup,
     kTraceStartupDuration, kTraceStartupOutputName, kURLMappings,

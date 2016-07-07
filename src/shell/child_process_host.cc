@@ -84,10 +84,11 @@ void ChildProcessHost::Start(const NativeApplicationOptions& options,
   controller_.set_connection_error_handler([this]() { OnConnectionError(); });
 
   if (connect_to_running_process) {
-    LOG(INFO) << "connection accepted, child_connection_id = "
-              << launch_data->child_connection_id << std::endl;
-    FileDescriptorSender sender("/home/pcmoritz/server");
-    sender.Send(launch_data->platform_pipe.handle1.Pass().get().fd);
+    std::string address = base::CommandLine::ForCurrentProcess()
+        ->GetSwitchValueASCII("external-connection-address");
+    ray::FileDescriptorSender sender(address);
+    sender.Send(launch_data->platform_pipe.handle1.Pass().get().fd,
+                launch_data->child_connection_id);
   } else {
     CHECK(base::PostTaskAndReplyWithResult(
         context_->task_runners()->blocking_pool(), FROM_HERE,

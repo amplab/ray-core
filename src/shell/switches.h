@@ -28,6 +28,7 @@ extern const char kTraceStartup[];
 extern const char kTraceStartupDuration[];
 extern const char kTraceStartupOutputName[];
 extern const char kURLMappings[];
+extern const char kExternalConnectionAddress[];
 
 extern const std::set<std::string> GetAllSwitches();
 

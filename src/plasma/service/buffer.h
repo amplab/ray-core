@@ -1,15 +1,27 @@
+#ifndef PLASMA_BUFFER_H_
+#define PLASMA_BUFFER_H_
+
 #include <vector>
 #include <memory>
 #include "base/logging.h"
 
 namespace plasma {
 
+typedef int64_t ObjectID;
+
 typedef void Status;
+
+class PlasmaInterface;
 
 /*! Read-only view on data
 */
 class Buffer {
  public:
+  // we declare ClientContext friend so it can initialize our private fields
+  friend class ClientContext;
+
+  Buffer() : data_(nullptr), size_(0) {}
+
   Buffer(const uint8_t* data, int64_t size) : data_(data), size_(size) {}
   /*! Return the start address of the buffer.
   */
@@ -31,6 +43,13 @@ class Buffer {
 */
 class MutableBuffer : public Buffer {
 public:
+  // we declare ClientContext friend so it can initialize our private fields
+  friend class ClientContext;
+
+  /*! After the default constructor has been called, the class is not
+      functional and all methods will raise errors. Only after it has been
+      initialized by ClientContext::BuildObject can this class be used.
+  */
   MutableBuffer();
 
   ~MutableBuffer();
@@ -59,9 +78,10 @@ public:
 private:
   uint8_t* mutable_data_;
   bool sealed_;
-  // Opaque pointer to break dependency chain
-  class PlasmaInterface;
+  plasma::ObjectID object_id_;
   std::shared_ptr<PlasmaInterface> interface_;
 };
 
 } // namespace plasma
+
+#endif

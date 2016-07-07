@@ -1,21 +1,19 @@
 #include "exchange_file_descriptor.h"
 
-#include <iostream>
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include "base/logging.h"
 
-#define CHECK(cond, msg) \
-  if (!(cond)) { \
-    std::cerr << msg << std::endl; \
-    exit(1); \
-  }
+namespace ray {
+
+const size_t MAX_PAYLOAD_SIZE = 1024;
 
 FileDescriptorSender::FileDescriptorSender(const std::string& address) {
   socket_ = socket(PF_UNIX, SOCK_STREAM, 0);
-  CHECK(socket_ != -1, "error creating socket");
+  CHECK(socket_ != -1) << "error creating socket";
   struct sockaddr_un addr;
   memset(&addr, 0, sizeof(struct sockaddr_un));
   addr.sun_family = AF_LOCAL;
@@ -23,8 +21,8 @@ FileDescriptorSender::FileDescriptorSender(const std::string& address) {
   addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
   unlink(addr.sun_path);
   size_t len = strlen(addr.sun_path) + sizeof(addr.sun_family);
-  CHECK(bind(socket_, (struct sockaddr *)&addr, len) != -1, "error binding socket");
-  CHECK(listen(socket_, 5) != -1, "error listening on socket");
+  CHECK(bind(socket_, (struct sockaddr *)&addr, len) != -1) << "error binding socket";
+  CHECK(listen(socket_, 5) != -1) << "error listening on socket";
 }
 
 FileDescriptorSender::~FileDescriptorSender() {
@@ -43,7 +41,7 @@ static void init_msg(struct msghdr *msg, struct iovec *iov, char *buf, size_t bu
   msg->msg_namelen = 0;
 }
 
-bool FileDescriptorSender::Send(int file_descriptor) {
+bool FileDescriptorSender::Send(int file_descriptor, const std::string& payload) {
   struct sockaddr_in addr;
 	socklen_t len = sizeof(addr);
 	int s = accept(socket_, (struct sockaddr *)&addr, &len);
@@ -60,25 +58,29 @@ bool FileDescriptorSender::Send(int file_descriptor) {
   header->cmsg_len = CMSG_LEN(sizeof(int));
   *(int *)CMSG_DATA(header) = file_descriptor;
 
-  return sendmsg(s, &msg, 0);
+  DCHECK(payload.size() < MAX_PAYLOAD_SIZE);
+
+  // send file descriptor and payload
+  return sendmsg(s, &msg, 0) != -1 &&
+    send(s, payload.data(), payload.size(), 0) == -1;
 }
 
 FileDescriptorReceiver::FileDescriptorReceiver(const std::string& address) {
   socket_ = socket(PF_UNIX, SOCK_STREAM, 0);
-  CHECK(socket_ != -1, "error creating socket");
+  CHECK(socket_ != -1) << "error creating socket";
   struct sockaddr_un addr;
   addr.sun_family = AF_LOCAL;
   strncpy(addr.sun_path, address.c_str(), sizeof(addr.sun_path));
   addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
   int r = connect(socket_, (struct sockaddr *)&addr, sizeof(addr));
-  CHECK(r != -1, "error connecting to socket");
+  CHECK(r != -1) << "error connecting to socket";
 }
 
 FileDescriptorReceiver::~FileDescriptorReceiver() {
   close(socket_);
 }
 
-int FileDescriptorReceiver::Receive() {
+int FileDescriptorReceiver::Receive(std::string& payload) {
   struct msghdr msg;
   struct iovec iov;
   char buf[CMSG_SPACE(sizeof(int))];
@@ -112,5 +114,14 @@ int FileDescriptorReceiver::Receive() {
     return -1;
   }
 
+  char reply[MAX_PAYLOAD_SIZE];
+  ssize_t len = recv(socket_, reply, MAX_PAYLOAD_SIZE, 0);
+  if (len < 0) {
+    return -1;
+  }
+
+  payload += std::string(reply, len);
   return found_fd;
 }
+
+} // namespace ray

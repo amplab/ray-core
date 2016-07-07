@@ -1,32 +1,18 @@
-#include <iostream>
-
 #include <string>
-#include <thread>
 #include <Python.h>
-#include "base/at_exit.h"
 #include "base/command_line.h"
-#include "mojo/edk/util/make_unique.h"
 #include "shell/init.h"
-#include "mojo/public/cpp/bindings/synchronous_interface_ptr.h"
-
-#include "plasma/service/plasma.mojom-sync.h"
-#include "ray/client/client_context.h"
+#include "plasma/service/api.h"
 
 extern "C" {
 
-typedef int64_t ObjectID;
+using plasma::ClientContext;
+using plasma::MutableBuffer;
+using plasma::ObjectID;
 
-typedef mojo::SynchronousInterfacePtr<plasma::Plasma> PlasmaInterface;
-
-struct PlasmaContext {
-  shell::ClientContext<plasma::Plasma> context;
-  PlasmaInterface interface;
-};
-
-static int GetPlasmaInterface(PyObject* object, PlasmaInterface** interface) {
+static int GetClientContext(PyObject* object, ClientContext** context) {
   if (PyCapsule_IsValid(object, "plasma")) {
-    auto p = static_cast<PlasmaContext*>(PyCapsule_GetPointer(object, "plasma"));
-    *interface = &p->interface;
+    *context = static_cast<ClientContext*>(PyCapsule_GetPointer(object, "plasma"));
     return 1;
   } else {
     PyErr_SetString(PyExc_TypeError, "must be a 'plasma' capsule");
@@ -35,66 +21,82 @@ static int GetPlasmaInterface(PyObject* object, PlasmaInterface** interface) {
 }
 
 static void PlasmaCapsule_Destructor(PyObject* capsule) {
-  delete static_cast<PlasmaContext*>(PyCapsule_GetPointer(capsule, "plasma"));
+  delete static_cast<ClientContext*>(PyCapsule_GetPointer(capsule, "plasma"));
+}
+
+static int GetMutableBuffer(PyObject* object, MutableBuffer** buffer) {
+  if (PyCapsule_IsValid(object, "mut_buff")) {
+    *buffer = static_cast<MutableBuffer*>(PyCapsule_GetPointer(object, "mut_buff"));
+    return 1;
+  } else {
+    PyErr_SetString(PyExc_TypeError, "must be a 'mut_buff' capsule");
+    return 0;
+  }
+}
+
+static void MutableBufferCapsule_Destructor(PyObject* capsule) {
+  delete static_cast<MutableBuffer*>(PyCapsule_GetPointer(capsule, "mut_buff"));
 }
 
 static PyObject* connect(PyObject* self, PyObject* args) {
   const char* address;
-  const char* child_connection_id;
-  if (!PyArg_ParseTuple(args, "ss", &address, &child_connection_id)) {
+  if (!PyArg_ParseTuple(args, "s", &address)) {
     return NULL;
   }
-  auto context = std::unique_ptr<PlasmaContext>(new PlasmaContext());
-  context->context.ConnectToShell(std::string("mojo:plasma"), std::string(address),
-                                  std::string(child_connection_id));
-  context->interface = context->context.GetInterface();
-  return PyCapsule_New(context.release(), "plasma", PlasmaCapsule_Destructor);
+  auto context = new ClientContext(std::string(address));
+  return PyCapsule_New(context, "plasma", PlasmaCapsule_Destructor);
 }
 
 static PyObject* build_object(PyObject* self, PyObject* args) {
-  PlasmaInterface* plasma;
+  ClientContext* context;
   ObjectID object_id;
   Py_ssize_t size;
   const char* name;
-  if (!PyArg_ParseTuple(args, "O&nns", &GetPlasmaInterface,
-                        &plasma, &object_id, &size, &name)) {
+  if (!PyArg_ParseTuple(args, "O&nns", &GetClientContext,
+                        &context, &object_id, &size, &name)) {
     return NULL;
   }
-  mojo::ScopedSharedBufferHandle handle;
-  (*plasma)->BuildObject(object_id, size, std::string(name), &handle);
-  void* pointer = nullptr;
-  CHECK_EQ(MOJO_RESULT_OK, mojo::MapBuffer(handle.get(), 0, size, &pointer, MOJO_MAP_BUFFER_FLAG_NONE));
-  return PyBuffer_FromReadWriteMemory(pointer, size);
+  auto mutable_buffer = new MutableBuffer();
+  context->BuildObject(object_id, size, *mutable_buffer, std::string(name));
+  return PyCapsule_New(mutable_buffer, "mut_buff", MutableBufferCapsule_Destructor);
+}
+
+static PyObject* get_mutable_buffer(PyObject* self, PyObject* args) {
+  MutableBuffer* buffer;
+  if (!PyArg_ParseTuple(args, "O&", &GetMutableBuffer, &buffer)) {
+    return NULL;
+  }
+  return PyBuffer_FromReadWriteMemory(reinterpret_cast<void*>(buffer->mutable_data()), buffer->size());
 }
 
 static PyObject* seal_object(PyObject* self, PyObject* args) {
-  PlasmaInterface* plasma;
-  ObjectID object_id;
-  if (!PyArg_ParseTuple(args, "O&n", &GetPlasmaInterface, &plasma, &object_id)) {
+  MutableBuffer* buffer;
+  if (!PyArg_ParseTuple(args, "O&", &GetMutableBuffer, &buffer)) {
     return NULL;
   }
-  (*plasma)->SealObject(object_id);
+  buffer->Seal();
   Py_RETURN_NONE;
 }
 
 // TODO: implement blocking and nonblocking version of this
 static PyObject* get_object(PyObject* self, PyObject* args) {
-  PlasmaInterface* plasma;
+  ClientContext* context;
   ObjectID object_id;
-  if (!PyArg_ParseTuple(args, "O&n", &GetPlasmaInterface, &plasma, &object_id)) {
+  if (!PyArg_ParseTuple(args, "O&n", &GetClientContext, &context, &object_id)) {
     return NULL;
   }
-  mojo::ScopedSharedBufferHandle handle;
-  uint64_t size;
-  (*plasma)->GetObject(object_id, true, &handle, &size);
-  void* pointer = nullptr;
-  CHECK_EQ(MOJO_RESULT_OK, mojo::MapBuffer(handle.get(), 0, size, &pointer, MOJO_MAP_BUFFER_FLAG_NONE));
-  return PyBuffer_FromMemory(pointer, size);
+  plasma::Buffer buffer;
+  context->GetObject(object_id, buffer);
+  const void* data = reinterpret_cast<const void*>(buffer.data());
+  // We need the const cast because the Python API does not implement const for this method
+  // TODO(pcm): Maybe the new Python buffer API does?
+  return PyBuffer_FromMemory(const_cast<void*>(data), buffer.size());
 }
 
 static PyObject* list_object(PyObject* self, PyObject* args) {
-  PlasmaInterface* plasma;
-  if (!PyArg_ParseTuple(args, "O&", &GetPlasmaInterface, &plasma)) {
+/*
+  ClientContext* plasma;
+  if (!PyArg_ParseTuple(args, "O&", &GetClientContext, &plasma)) {
     return NULL;
   }
   mojo::Array<plasma::ObjectInfoPtr> infos;
@@ -112,11 +114,14 @@ static PyObject* list_object(PyObject* self, PyObject* args) {
   PyTuple_SetItem(result, 1, sizes);
   PyTuple_SetItem(result, 2, timestamps);
   return result;
+*/
+  Py_RETURN_NONE;
 }
 
 static PyMethodDef RayClientMethods[] = {
   { "connect", connect, METH_VARARGS, "connect to the shell" },
   { "build_object", build_object, METH_VARARGS, "build a new object" },
+  { "get_mutable_buffer", get_mutable_buffer, METH_VARARGS, "get mutable buffer" },
   { "seal_object", seal_object, METH_VARARGS, "seal an object" },
   { "get_object", get_object, METH_VARARGS, "get an object from plasma" },
   { "list_object", list_object, METH_VARARGS, "list objects in plasma" },

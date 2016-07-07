@@ -1,34 +1,24 @@
-#include <string>
-#include "mojo/public/cpp/bindings/synchronous_interface_ptr.h"
-#include "plasma/service/plasma.mojom-sync.h"
-#include "ray/client/client_context.h"
+#ifndef PLASMA_API_H_
+#define PLASMA_API_H_
 
+#include <string>
 #include "buffer.h"
 
 namespace plasma {
 
-typedef int64_t ObjectID;
 typedef int64_t ClientID;
+
+class PlasmaInterface;
 
 class ObjectInfo {
  public:
+  ObjectInfo();
+  ~ObjectInfo();
   std::string name() const;
   int64_t size() const;
   int64_t creation_time() const;
   int64_t sealing_time() const;
   uint64_t creator() const;
-};
-
-// TODO(pcm): Do not make this public
-class PlasmaInterface {
- public:
-  PlasmaInterface(const std::string& address,
-                  const std::string& child_connection_id);
-  ~PlasmaInterface();
-  mojo::SynchronousInterfacePtr<plasma::service::Plasma>& get();
- private:
-  mojo::SynchronousInterfacePtr<plasma::service::Plasma> interface_;
-  shell::ClientContext<plasma::service::Plasma> context_;
 };
 
 /*! A client context is the primary interface through which clients interact
@@ -48,8 +38,7 @@ class ClientContext {
       \param child_connection_id
         Unique identifier of this connection (allocated by the Ray shell)
   */
-  ClientContext(const std::string& address,
-                const std::string& child_connection_id);
+  ClientContext(const std::string& address);
 
   ~ClientContext();
 
@@ -114,3 +103,5 @@ class ClientContext {
 };
 
 }
+
+#endif
