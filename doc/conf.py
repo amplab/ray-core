@@ -297,3 +297,12 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 breathe_projects = {
   "ray":"doxygen/xml/",
 }
+
+# run doxygen on read-the-docs
+
+import subprocess, os
+
+read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
+
+if read_the_docs_build:
+  subprocess.call('cd ..; doxygen Doxyfile', shell=True)
