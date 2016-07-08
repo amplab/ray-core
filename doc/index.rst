@@ -6,21 +6,30 @@
 Ray Core documentation
 ======================
 
-Welcome to the documentation of Ray Core!
+Welcome to the documentation of Ray Core! The documentation consists of two
+parts:
 
-There is a user documentation that describes how to use the parts of the
-system and the public API and a developer documentation that describes
-internals.
+* the system user documentation which describes the system API and how to use the
+  system
 
-User documentation:
+* the developer documentation that describes the internals of the system and the
+  developer API
+
+These are separate from the Ray user documentation which can be found under
+https://github.com/amplab/ray/blob/master/doc/introduction.md.
+
+**Ray Core user documentation:**
 
 .. toctree::
    :maxdepth: 2
    :glob:
 
-   *
+   quickstart.rst
+   system.rst
+   plasma.rst
+   services.rst
 
-Developer documentation:
+**Ray Core developer documentation:**
 
 .. toctree::
    :maxdepth: 2

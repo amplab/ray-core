@@ -1,14 +1,22 @@
 Developer documentation for Plasma
 ==================================
 
-.. doxygenclass:: plasma::PlasmaEntry
+The IPC interface
+-----------------
+
+.. literalinclude:: ../../src/plasma/service/plasma.mojom
+
+Internal classes
+----------------
+
+.. doxygenclass:: plasma::service::PlasmaEntry
    :project: ray
    :members:
 
-.. doxygenclass:: plasma::PlasmaImpl
+.. doxygenclass:: plasma::service::PlasmaImpl
    :project: ray
    :members:
 
-.. doxygenclass:: plasma::PlasmaServerApp
+.. doxygenclass:: plasma::service::PlasmaServerApp
    :project: ray
    :members:

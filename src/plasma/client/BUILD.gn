@@ -19,6 +19,7 @@ shared_library("plasma") {
   ]
 
   if (!is_win) {
+    # This is required so functions in Python C extensions can be found
     configs -= [ "//build/config/gcc:symbol_visibility_hidden" ]
   }
 

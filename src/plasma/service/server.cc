@@ -21,12 +21,8 @@ class PlasmaEntry {
 public:
   //! Handle to the shared memory buffer where the object is stored
   mojo::ScopedSharedBufferHandle handle;
-  //! Name of the object as set by the user
-  std::string name;
-  //! Size of the object in bytes
-  size_t size;
-  //! Creation time of the object in microseconds since the Unix epoch
-  int64_t timestamp;
+  //! ObjectInfo (see plasma.mojom)
+  ObjectInfoPtr object_info;
 };
 
 /*! Implementation of the Plasma service interface. This implementation is
@@ -48,7 +44,7 @@ class PlasmaImpl : public Plasma {
       \return
         Shared memory handle to the read-write memory of the object
   */
-  void CreateObject(int64 object_id, uint64 size, const mojo::String& name,
+  void CreateObject(int64 object_id, uint64 size, const mojo::String& name, int64 creator_id,
                    const CreateObjectCallback& callback) override {
     mojo::ScopedSharedBufferHandle handle;
     CHECK_EQ(MOJO_RESULT_OK, mojo::CreateSharedBuffer(nullptr, size, &handle));
@@ -56,8 +52,14 @@ class PlasmaImpl : public Plasma {
     mojo::ScopedSharedBufferHandle handle_copy;
     mojo::DuplicateBuffer(handle.get(), nullptr, &handle_copy);
     DCHECK(handle_copy.is_valid());
-    int64_t timestamp = base::TimeTicks::Now().ToInternalValue(); // TODO(pcm): Check this
-    open_objects_.emplace(object_id, PlasmaEntry {handle.Pass(), name.get(), size, timestamp});
+    // Set object info
+    auto object_info = ObjectInfo::New();
+    object_info->name = std::string(name.get());
+    object_info->size = size;
+    object_info->create_time = base::TimeTicks::Now().ToInternalValue(); // TODO(pcm): Check this
+    object_info->construct_delta = -1;
+    object_info->creator_id = creator_id;
+    open_objects_.emplace(object_id, PlasmaEntry {handle.Pass(), object_info.Pass()});
     callback.Run(handle_copy.Pass());
   }
 
@@ -75,7 +77,7 @@ class PlasmaImpl : public Plasma {
     const PlasmaEntry& object = sealed_objects_[object_id];
     mojo::DuplicateBuffer(object.handle.get(), nullptr, &handle);
     DCHECK(handle.is_valid());
-    callback.Run(handle.Pass(), object.size);
+    callback.Run(handle.Pass(), object.object_info->size);
   }
 
   /*! Seal an object, making it immutable.
@@ -84,7 +86,12 @@ class PlasmaImpl : public Plasma {
         Unique identifier of the object to be sealed
   */
   void SealObject(int64 object_id) override {
+    // TODO(pcm): Check this
+    open_objects_[object_id].object_info->construct_delta =
+      base::TimeTicks::Now().ToInternalValue() -
+        open_objects_[object_id].object_info->create_time;
     sealed_objects_[object_id] = std::move(open_objects_[object_id]);
+    open_objects_.erase(object_id);
     for (auto elem : objects_notify_[object_id]) {
       pass_sealed_object(object_id, elem);
     }
@@ -122,11 +129,10 @@ class PlasmaImpl : public Plasma {
   void ListObjects(const ListObjectsCallback& callback) override {
     auto object_info = mojo::Array<ObjectInfoPtr>::New(0);
     for (const auto & entry : sealed_objects_) {
-      auto elem = ObjectInfo::New();
-      elem->name = entry.second.name;
-      elem->size = entry.second.size;
-      elem->timestamp = entry.second.timestamp;
-      object_info.push_back(elem.Pass());
+      object_info.push_back(entry.second.object_info->Clone());
+    }
+    for (const auto & entry : open_objects_) {
+      object_info.push_back(entry.second.object_info->Clone());
     }
     callback.Run(object_info.Pass());
   }

@@ -93,29 +93,32 @@ static PyObject* get_object(PyObject* self, PyObject* args) {
   return PyBuffer_FromMemory(const_cast<void*>(data), buffer.size());
 }
 
-static PyObject* list_object(PyObject* self, PyObject* args) {
-/*
-  ClientContext* plasma;
-  if (!PyArg_ParseTuple(args, "O&", &GetClientContext, &plasma)) {
+static PyObject* list_objects(PyObject* self, PyObject* args) {
+  ClientContext* context;
+  if (!PyArg_ParseTuple(args, "O&", &GetClientContext, &context)) {
     return NULL;
   }
-  mojo::Array<plasma::ObjectInfoPtr> infos;
-  (*plasma)->ListObjects(&infos);
+  std::vector<plasma::ObjectInfo> infos;
+  context->ListObjects(&infos);
   PyObject* names = PyList_New(infos.size());
   PyObject* sizes = PyList_New(infos.size());
-  PyObject* timestamps = PyList_New(infos.size());
+  PyObject* create_times = PyList_New(infos.size());
+  PyObject* construct_deltas = PyList_New(infos.size());
+  PyObject* creator_ids = PyList_New(infos.size());
   for (size_t i = 0; i < infos.size(); ++i) {
-    PyList_SetItem(names, i, PyString_FromString(infos[i]->name.data()));
-    PyList_SetItem(sizes, i, PyInt_FromLong(infos[i]->size));
-    PyList_SetItem(timestamps, i, PyInt_FromLong(infos[i]->timestamp));
+    PyList_SetItem(names, i, PyString_FromString(infos[i].name.c_str()));
+    PyList_SetItem(sizes, i, PyInt_FromLong(infos[i].size));
+    PyList_SetItem(create_times, i, PyInt_FromLong(infos[i].create_time));
+    PyList_SetItem(construct_deltas, i, PyInt_FromLong(infos[i].construct_delta));
+    PyList_SetItem(creator_ids, i, PyInt_FromLong(infos[i].creator_id));
   }
-  PyObject* result = PyTuple_New(3);
+  PyObject* result = PyTuple_New(5);
   PyTuple_SetItem(result, 0, names);
   PyTuple_SetItem(result, 1, sizes);
-  PyTuple_SetItem(result, 2, timestamps);
+  PyTuple_SetItem(result, 2, create_times);
+  PyTuple_SetItem(result, 3, construct_deltas);
+  PyTuple_SetItem(result, 4, creator_ids);
   return result;
-*/
-  Py_RETURN_NONE;
 }
 
 static PyMethodDef RayClientMethods[] = {
@@ -124,7 +127,7 @@ static PyMethodDef RayClientMethods[] = {
   { "get_mutable_buffer", get_mutable_buffer, METH_VARARGS, "get mutable buffer" },
   { "seal_object", seal_object, METH_VARARGS, "seal an object" },
   { "get_object", get_object, METH_VARARGS, "get an object from plasma" },
-  { "list_object", list_object, METH_VARARGS, "list objects in plasma" },
+  { "list_objects", list_objects, METH_VARARGS, "list objects in plasma" },
   { NULL, NULL, 0, NULL }
 };
 

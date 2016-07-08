@@ -11,14 +11,17 @@ typedef int64_t ClientID;
 class PlasmaInterface;
 
 class ObjectInfo {
- public:
-  ObjectInfo();
-  ~ObjectInfo();
-  std::string name() const;
-  int64_t size() const;
-  int64_t creation_time() const;
-  int64_t sealing_time() const;
-  uint64_t creator() const;
+public:
+  //! Name of the object as provided by the user during object construction
+  std::string name;
+  //! Size of the object in bytes
+  int64_t size;
+  //! Time when object construction started, in microseconds since the Unix epoch
+  int64_t create_time;
+  //! Time in microseconds between object creation and sealing
+  int64_t construct_delta;
+  //! Process ID of the process that created the object
+  int64_t creator_id;
 };
 
 /*! A client context is the primary interface through which clients interact
@@ -28,15 +31,8 @@ class ClientContext {
  public:
   /*! Create a new client context.
 
-      \param (client_id)
-        Unique identifier of the client that connects to Plasma. This client
-        will be owner over all objects created through this context.
-
       \param address
         Adress of the Ray shell socket we are connecting to
-
-      \param child_connection_id
-        Unique identifier of this connection (allocated by the Ray shell)
   */
   ClientContext(const std::string& address);
 
@@ -63,9 +59,15 @@ class ClientContext {
       \param name
         An optional name for the object through which is can be
         accessed without knowing its object ID.
+
+      \param metadata
+        An optional dictionary of metadata for the object. The keys of
+        the dictionary are strings and the values are arbitrary binary data
+        represented by Buffer objects.
   */
   Status BuildObject(ObjectID object_id, int64_t size,
-                     MutableBuffer& buffer, const std::string& name = "");
+                     MutableBuffer& buffer, const std::string& name = "",
+                     const std::map<std::string, Buffer>& metadata = EMPTY);
 
   /*! Get buffer associated to an object ID. If the object has not
 	    been sealed yet, this function will block the current thread.
