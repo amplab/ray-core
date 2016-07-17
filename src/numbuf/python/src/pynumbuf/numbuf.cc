@@ -36,7 +36,7 @@ PyObject* serialize_list(PyObject* self, PyObject* args) {
   }
   std::shared_ptr<Array>* result = new std::shared_ptr<Array>();
   if (PyList_Check(value)) {
-    *result = SerializeList(std::vector<PyObject*>({value}));
+    *result = SerializeSequences(std::vector<PyObject*>({value}));
     std::cout << "validation: " << (*result)->Validate().ToString() << std::endl;
     std::cout << "schema: " << (*result)->type()->ToString() << std::endl;
     return PyCapsule_New(static_cast<void*>(result), "arrow", &ArrowCapsule_Destructor);

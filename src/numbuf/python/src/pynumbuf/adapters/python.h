@@ -11,8 +11,10 @@
 
 namespace numbuf {
 
-std::shared_ptr<arrow::Array> SerializeList(std::vector<PyObject*> list);
+std::shared_ptr<arrow::Array> SerializeSequences(std::vector<PyObject*> sequences);
+std::shared_ptr<arrow::Array> SerializeDict(std::vector<PyObject*> dicts);
 arrow::Status DeserializeList(std::shared_ptr<arrow::Array> array, int32_t start_idx, int32_t stop_idx, PyObject** out);
+arrow::Status DeserializeTuple(std::shared_ptr<arrow::Array> array, int32_t start_idx, int32_t stop_idx, PyObject** out);
 arrow::Status DeserializeDict(std::shared_ptr<arrow::Array> array, int32_t start_idx, int32_t stop_idx, PyObject** out);
 
 }

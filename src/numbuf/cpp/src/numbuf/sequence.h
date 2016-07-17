@@ -14,9 +14,10 @@ const int8_t FLOAT_TAG = 3;
 const int8_t DOUBLE_TAG = 4;
 const int8_t TENSOR_TAG = 5;
 const int8_t LIST_TAG = 6;
-const int8_t DICT_TAG = 7;
+const int8_t TUPLE_TAG = 7;
+const int8_t DICT_TAG = 8;
 
-const int8_t NUM_TAGS = 8;
+const int8_t NUM_TAGS = 9;
 
 class SequenceBuilder {
  public:
@@ -70,11 +71,14 @@ class SequenceBuilder {
   */
   arrow::Status AppendList(int32_t size);
 
+  arrow::Status AppendTuple(int32_t size);
+
   arrow::Status AppendDict(int32_t size);
 
   //! Finish building the list and return the result
   std::shared_ptr<arrow::DenseUnionArray> Finish(
     std::shared_ptr<arrow::Array> list_data,
+    std::shared_ptr<arrow::Array> tuple_data,
     std::shared_ptr<arrow::Array> dict_data);
 
  private:
@@ -91,6 +95,7 @@ class SequenceBuilder {
   arrow::DoubleBuilder doubles_;
   DoubleTensorBuilder tensors_;
   std::vector<int32_t> list_offsets_;
+  std::vector<int32_t> tuple_offsets_;
   std::vector<int32_t> dict_offsets_;
 };
 

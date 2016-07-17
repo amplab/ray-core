@@ -25,6 +25,11 @@ PyObject* get_value(ArrayPtr arr, int32_t index, int32_t type) {
       ARROW_CHECK_OK(DeserializeList(list->values(), list->value_offset(index), list->value_offset(index+1), &result));
       return result;
     }
+    case TUPLE_TAG: {
+      auto list = std::static_pointer_cast<ListArray>(arr);
+      ARROW_CHECK_OK(DeserializeTuple(list->values(), list->value_offset(index), list->value_offset(index+1), &result));
+      return result;
+    }
     case DICT_TAG: {
       auto list = std::static_pointer_cast<ListArray>(arr);
       ARROW_CHECK_OK(DeserializeDict(list->values(), list->value_offset(index), list->value_offset(index+1), &result));
@@ -39,7 +44,10 @@ PyObject* get_value(ArrayPtr arr, int32_t index, int32_t type) {
   return NULL;
 }
 
-Status append(PyObject* elem, SequenceBuilder& builder, std::vector<PyObject*>& sublists, std::vector<PyObject*>& subdicts) {
+Status append(PyObject* elem, SequenceBuilder& builder,
+              std::vector<PyObject*>& sublists,
+              std::vector<PyObject*>& subtuples,
+              std::vector<PyObject*>& subdicts) {
   // The bool case must precede the int case (PyInt_Check passes for bools)
   if (PyBool_Check(elem)) {
     RETURN_NOT_OK(builder.Append(elem == Py_True));
@@ -55,6 +63,9 @@ Status append(PyObject* elem, SequenceBuilder& builder, std::vector<PyObject*>& 
   } else if (PyDict_Check(elem)) {
     builder.AppendDict(PyDict_Size(elem));
     subdicts.push_back(elem);
+  } else if (PyTuple_Check(elem)) {
+    builder.AppendTuple(PyTuple_Size(elem));
+    subtuples.push_back(elem);
   } else if (PyArray_Check(elem)) {
     RETURN_NOT_OK(SerializeArray((PyArrayObject*) elem, builder));
   } else if (elem == Py_None) {
@@ -66,56 +77,68 @@ Status append(PyObject* elem, SequenceBuilder& builder, std::vector<PyObject*>& 
   return Status::OK();
 }
 
+std::shared_ptr<Array> SerializeSequences(std::vector<PyObject*> sequences) {
+  SequenceBuilder builder(nullptr);
+  std::vector<PyObject*> sublists, subtuples, subdicts;
+  for (const auto& sequence : sequences) {
+    PyObject* item;
+    PyObject* iterator = PyObject_GetIter(sequence);
+    while (item = PyIter_Next(iterator)) {
+      ARROW_CHECK_OK(append(item, builder, sublists, subtuples, subdicts));
+      Py_DECREF(item);
+    }
+    Py_DECREF(iterator);
+  }
+  auto list = sublists.size() > 0 ? SerializeSequences(sublists) : nullptr;
+  auto tuple = subtuples.size() > 0 ? SerializeSequences(subtuples) : nullptr;
+  auto dict = subdicts.size() > 0 ? SerializeDict(subdicts) : nullptr;
+  return builder.Finish(list, tuple, dict);
+}
+
+#define DESERIALIZE_SEQUENCE(CREATE, SET_ITEM)                                \
+  auto data = std::dynamic_pointer_cast<DenseUnionArray>(array);              \
+  int32_t size = array->length();                                             \
+  PyObject* result = CREATE(stop_idx - start_idx);                            \
+  auto types = std::make_shared<Int8Array>(size, data->types());              \
+  auto offsets = std::make_shared<Int32Array>(size, data->offset_buf());      \
+  for (size_t i = start_idx; i < stop_idx; ++i) {                             \
+    if (data->IsNull(i)) {                                                    \
+      Py_INCREF(Py_None);                                                     \
+      SET_ITEM(result, i-start_idx, Py_None);                                 \
+    } else {                                                                  \
+      int32_t offset = offsets->Value(i);                                     \
+      int8_t type = types->Value(i);                                          \
+      ArrayPtr arr = data->child(type);                                       \
+      SET_ITEM(result, i-start_idx, get_value(arr, offset, type));            \
+    }                                                                         \
+  }                                                                           \
+  *out = result;                                                              \
+  return Status::OK();
+
+Status DeserializeList(std::shared_ptr<Array> array, int32_t start_idx, int32_t stop_idx, PyObject** out) {
+  DESERIALIZE_SEQUENCE(PyList_New, PyList_SetItem)
+}
+
+Status DeserializeTuple(std::shared_ptr<Array> array, int32_t start_idx, int32_t stop_idx, PyObject** out) {
+  DESERIALIZE_SEQUENCE(PyTuple_New, PyTuple_SetItem)
+}
+
 std::shared_ptr<Array> SerializeDict(std::vector<PyObject*> dicts) {
   DictBuilder result;
-  std::vector<PyObject*> sublists, subdicts, dummy;
+  std::vector<PyObject*> sublists, subtuples, subdicts, dummy;
   for (const auto& dict : dicts) {
     PyObject *key, *value;
     Py_ssize_t pos = 0;
     while (PyDict_Next(dict, &pos, &key, &value)) {
-      ARROW_CHECK_OK(append(key, result.keys(), dummy, dummy));
-      ARROW_CHECK_OK(append(value, result.vals(), sublists, subdicts));
+      ARROW_CHECK_OK(append(key, result.keys(), dummy, dummy, dummy));
+      DCHECK(dummy.size() == 0);
+      ARROW_CHECK_OK(append(value, result.vals(), sublists, subtuples, subdicts));
     }
   }
-  auto val_list = sublists.size() > 0 ? SerializeList(sublists) : nullptr;
+  auto val_list = sublists.size() > 0 ? SerializeSequences(sublists) : nullptr;
+  auto val_tuples = subtuples.size() > 0 ? SerializeSequences(subtuples) : nullptr;
   auto val_dict = subdicts.size() > 0 ? SerializeDict(subdicts) : nullptr;
-  return result.Finish(val_list, val_dict);
-}
-
-std::shared_ptr<Array> SerializeList(std::vector<PyObject*> lists) {
-  SequenceBuilder builder(nullptr);
-  std::vector<PyObject*> sublists, subdicts;
-  for (const auto& list : lists) {
-    for (size_t i = 0, size = PyList_Size(list); i < size; ++i) {
-      PyObject* elem = PyList_GetItem(list, i);
-      ARROW_CHECK_OK(append(elem, builder, sublists, subdicts));
-    }
-  }
-  auto list = sublists.size() > 0 ? SerializeList(sublists) : nullptr;
-  auto dict = subdicts.size() > 0 ? SerializeDict(subdicts) : nullptr;
-  return builder.Finish(list, dict);
-}
-
-Status DeserializeList(std::shared_ptr<Array> array, int32_t start_idx, int32_t stop_idx, PyObject** out) {
-  auto data = std::dynamic_pointer_cast<DenseUnionArray>(array);
-  // TODO(pcm): error handling
-  int32_t size = array->length();
-  PyObject* result = PyList_New(stop_idx - start_idx);
-  auto types = std::make_shared<Int8Array>(size, data->types());
-  auto offsets = std::make_shared<Int32Array>(size, data->offset_buf());
-  for (size_t i = start_idx; i < stop_idx; ++i) {
-    if (data->IsNull(i)) {
-      Py_INCREF(Py_None);
-      PyList_SetItem(result, i-start_idx, Py_None);
-    } else {
-      int32_t offset = offsets->Value(i);
-      int8_t type = types->Value(i);
-      ArrayPtr arr = data->child(type);
-      PyList_SetItem(result, i-start_idx, get_value(arr, offset, type));
-    }
-  }
-  *out = result;
-  return Status::OK();
+  return result.Finish(val_list, val_tuples, val_dict);
 }
 
 Status DeserializeDict(std::shared_ptr<Array> array, int32_t start_idx, int32_t stop_idx, PyObject** out) {

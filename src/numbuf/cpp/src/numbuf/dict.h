@@ -35,6 +35,7 @@ public:
   */
   std::shared_ptr<arrow::StructArray> Finish(
     std::shared_ptr<arrow::Array> list_data,
+    std::shared_ptr<arrow::Array> tuple_data,
     std::shared_ptr<arrow::Array> dict_data);
 
 private:
