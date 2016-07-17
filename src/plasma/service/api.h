@@ -19,9 +19,11 @@ public:
   //! Time when object construction started, in microseconds since the Unix epoch
   int64_t create_time;
   //! Time in microseconds between object creation and sealing
-  int64_t construct_delta;
+  int64_t construct_duration;
   //! Process ID of the process that created the object
   int64_t creator_id;
+  //! Cluster wide unique address for the process that created the object
+  std::string creator_address;
 };
 
 /*! A client context is the primary interface through which clients interact
@@ -84,11 +86,6 @@ class ClientContext {
       vector objects.
   */
   Status ListObjects(std::vector<ObjectInfo>* objects);
-
-  /*! Store user provided metadata for a given object. Can only be set by the
-      creator of the object an only before the object is sealed.
-  */
-  Status SetMetadata(ObjectID object_id, const std::string& key, Buffer data);
 
   /*! Retrieve metadata for a given object.
 

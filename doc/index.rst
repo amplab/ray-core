@@ -16,7 +16,7 @@ parts:
   developer API
 
 These are separate from the Ray user documentation which can be found under
-https://github.com/amplab/ray/blob/master/doc/introduction.md.
+https://github.com/amplab/ray/blob/master/README.md.
 
 **Ray Core user documentation:**
 
@@ -27,6 +27,7 @@ https://github.com/amplab/ray/blob/master/doc/introduction.md.
    quickstart.rst
    system.rst
    plasma.rst
+   numbuf.rst
    services.rst
 
 **Ray Core developer documentation:**
