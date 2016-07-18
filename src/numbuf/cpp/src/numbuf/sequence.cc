@@ -10,13 +10,26 @@ SequenceBuilder::SequenceBuilder(MemoryPool* pool)
       bools_(pool, std::make_shared<BooleanType>()),
       ints_(pool), strings_(pool, std::make_shared<StringType>()),
       floats_(pool), doubles_(pool),
-      tensors_(std::make_shared<DoubleType>(), pool),
+      uint8_tensors_(std::make_shared<UInt8Type>(), pool),
+      int8_tensors_(std::make_shared<Int8Type>(), pool),
+      uint16_tensors_(std::make_shared<UInt16Type>(), pool),
+      int16_tensors_(std::make_shared<Int16Type>(), pool),
+      uint32_tensors_(std::make_shared<UInt32Type>(), pool),
+      int32_tensors_(std::make_shared<Int32Type>(), pool),
+      uint64_tensors_(std::make_shared<UInt64Type>(), pool),
+      int64_tensors_(std::make_shared<Int64Type>(), pool),
+      float_tensors_(std::make_shared<FloatType>(), pool),
+      double_tensors_(std::make_shared<DoubleType>(), pool),
       list_offsets_({0}), tuple_offsets_({0}), dict_offsets_({0}) {}
 
-#define NUMBUF_LIST_UPDATE(OFFSET, TAG)          \
-  	RETURN_NOT_OK(offsets_.Append(OFFSET));      \
-    RETURN_NOT_OK(types_.Append(TAG));           \
-    RETURN_NOT_OK(nones_.AppendToBitmap(true));
+#define UPDATE(OFFSET, TAG)                    \
+  if (TAG == -1) {                             \
+    TAG = num_tags;                            \
+    num_tags += 1;                             \
+  }                                            \
+  RETURN_NOT_OK(offsets_.Append(OFFSET));      \
+  RETURN_NOT_OK(types_.Append(TAG));           \
+  RETURN_NOT_OK(nones_.AppendToBitmap(true));
 
 Status SequenceBuilder::Append() {
   RETURN_NOT_OK(offsets_.Append(0));
@@ -25,82 +38,124 @@ Status SequenceBuilder::Append() {
 }
 
 Status SequenceBuilder::Append(bool data) {
-  NUMBUF_LIST_UPDATE(bools_.length(), BOOL_TAG);
+  UPDATE(bools_.length(), bool_tag);
   return bools_.Append(data);
 }
 
 Status SequenceBuilder::Append(int64_t data) {
-  NUMBUF_LIST_UPDATE(ints_.length(), INT_TAG);
+  UPDATE(ints_.length(), int_tag);
   return ints_.Append(data);
 }
 
-Status SequenceBuilder::Append(const char* data) {
-  NUMBUF_LIST_UPDATE(strings_.length(), STRING_TAG);
-  return strings_.Append(std::string(data, strlen(data)));
+Status SequenceBuilder::Append(uint64_t data) {
+  UPDATE(ints_.length(), int_tag);
+  return ints_.Append(data);
+}
+
+Status SequenceBuilder::Append(const char* data, int32_t length) {
+  UPDATE(strings_.length(), string_tag);
+  return strings_.Append(data, length);
 }
 
 Status SequenceBuilder::Append(float data) {
-  NUMBUF_LIST_UPDATE(floats_.length(), FLOAT_TAG);
+  UPDATE(floats_.length(), float_tag);
   return floats_.Append(data);
 }
 
 Status SequenceBuilder::Append(double data) {
-  NUMBUF_LIST_UPDATE(doubles_.length(), DOUBLE_TAG);
+  UPDATE(doubles_.length(), double_tag);
   return doubles_.Append(data);
 }
 
-Status SequenceBuilder::Append(const std::vector<int64_t>& dims, double* data) {
-  NUMBUF_LIST_UPDATE(tensors_.length(), TENSOR_TAG);
-  return tensors_.Append(dims, data);
-}
+#define DEF_TENSOR_APPEND(NAME, TYPE, TAG)                                       \
+  Status SequenceBuilder::Append(const std::vector<int64_t>& dims, TYPE* data) { \
+    UPDATE(NAME.length(), TAG);                                                  \
+    return NAME.Append(dims, data);                                              \
+  }
+
+DEF_TENSOR_APPEND(uint8_tensors_, uint8_t, uint8_tensor_tag);
+DEF_TENSOR_APPEND(int8_tensors_, int8_t, int8_tensor_tag);
+DEF_TENSOR_APPEND(uint16_tensors_, uint16_t, uint16_tensor_tag);
+DEF_TENSOR_APPEND(int16_tensors_, int16_t, int16_tensor_tag);
+DEF_TENSOR_APPEND(uint32_tensors_, uint32_t, uint32_tensor_tag);
+DEF_TENSOR_APPEND(int32_tensors_, int32_t, int32_tensor_tag);
+DEF_TENSOR_APPEND(uint64_tensors_, uint64_t, uint64_tensor_tag);
+DEF_TENSOR_APPEND(int64_tensors_, int64_t, int64_tensor_tag);
+DEF_TENSOR_APPEND(float_tensors_, float, float_tensor_tag);
+DEF_TENSOR_APPEND(double_tensors_, double, double_tensor_tag);
 
 Status SequenceBuilder::AppendList(int32_t size) {
-  NUMBUF_LIST_UPDATE(list_offsets_.size() - 1, LIST_TAG);
+  UPDATE(list_offsets_.size() - 1, list_tag);
   list_offsets_.push_back(list_offsets_.back() + size);
   return Status::OK();
 }
 
 Status SequenceBuilder::AppendTuple(int32_t size) {
-  NUMBUF_LIST_UPDATE(tuple_offsets_.size() - 1, TUPLE_TAG);
+  UPDATE(tuple_offsets_.size() - 1, tuple_tag);
   tuple_offsets_.push_back(tuple_offsets_.back() + size);
   return Status::OK();
 }
 
 Status SequenceBuilder::AppendDict(int32_t size) {
-  NUMBUF_LIST_UPDATE(dict_offsets_.size() - 1, DICT_TAG);
+  UPDATE(dict_offsets_.size() - 1, dict_tag);
   dict_offsets_.push_back(dict_offsets_.back() + size);
   return Status::OK();
 }
 
-#define SEQUENCE_ADD_ELEMENT(VARNAME, TAG)       \
-  types[TAG] = VARNAME.type();                   \
-  children[TAG] = VARNAME.Finish();              \
+#define ADD_ELEMENT(VARNAME, TAG)                 \
+  if (TAG != -1) {                                \
+    types[TAG] = VARNAME.type();                  \
+    children[TAG] = VARNAME.Finish();             \
+    ARROW_CHECK_OK(nones_.AppendToBitmap(true));  \
+  }
 
-#define SEQUENCE_ADD_SUBSEQUENCE(DATA, OFFSETS, BUILDER, TAG)       \
-  DATA = DATA ? DATA : std::make_shared<NullArray>(0);              \
-  DCHECK(DATA->length() == OFFSETS.back());                         \
-  ListBuilder BUILDER(pool_, DATA);                                 \
-  ARROW_CHECK_OK(BUILDER.Append(OFFSETS.data(), OFFSETS.size()));   \
-  SEQUENCE_ADD_ELEMENT(BUILDER, TAG);
+#define ADD_SUBSEQUENCE(DATA, OFFSETS, BUILDER, TAG, NAME)                    \
+  if (DATA) {                                                                 \
+    DCHECK(DATA->length() == OFFSETS.back());                                 \
+    auto list_builder = std::make_shared<ListBuilder>(pool_, DATA);           \
+    auto field = std::make_shared<Field>(NAME, list_builder->type());         \
+    auto type = std::make_shared<StructType>(std::vector<FieldPtr>({field})); \
+    auto lists = std::vector<std::shared_ptr<ArrayBuilder>>({list_builder});  \
+    StructBuilder builder(pool_, type, lists);                                \
+    OFFSETS.pop_back();                                                       \
+    ARROW_CHECK_OK(list_builder->Append(OFFSETS.data(), OFFSETS.size()));     \
+    builder.Append();                                                         \
+    ADD_ELEMENT(builder, TAG);                                                \
+  } else {                                                                    \
+    DCHECK(OFFSETS.size() == 1);                                              \
+  }
 
 std::shared_ptr<DenseUnionArray> SequenceBuilder::Finish(
   std::shared_ptr<Array> list_data,
   std::shared_ptr<Array> tuple_data,
   std::shared_ptr<Array> dict_data) {
 
-  std::vector<TypePtr> types(NUM_TAGS);
-  std::vector<ArrayPtr> children(NUM_TAGS);
+  std::vector<TypePtr> types(num_tags);
+  std::vector<ArrayPtr> children(num_tags);
 
-  SEQUENCE_ADD_ELEMENT(bools_, BOOL_TAG);
-  SEQUENCE_ADD_ELEMENT(ints_, INT_TAG);
-  SEQUENCE_ADD_ELEMENT(strings_, STRING_TAG);
-  SEQUENCE_ADD_ELEMENT(floats_, FLOAT_TAG);
-  SEQUENCE_ADD_ELEMENT(doubles_, DOUBLE_TAG);
-  SEQUENCE_ADD_ELEMENT(tensors_, TENSOR_TAG);
+  ADD_ELEMENT(bools_, bool_tag);
+  ADD_ELEMENT(ints_, int_tag);
+  ADD_ELEMENT(strings_, string_tag);
+  ADD_ELEMENT(floats_, float_tag);
+  ADD_ELEMENT(doubles_, double_tag);
 
-  SEQUENCE_ADD_SUBSEQUENCE(list_data, list_offsets_, list_builder, LIST_TAG);
-  SEQUENCE_ADD_SUBSEQUENCE(tuple_data, tuple_offsets_, tuple_builder, TUPLE_TAG);
-  SEQUENCE_ADD_SUBSEQUENCE(dict_data, dict_offsets_, dict_builder, DICT_TAG);
+  ADD_ELEMENT(uint8_tensors_, uint8_tensor_tag);
+
+  ADD_ELEMENT(int8_tensors_, int8_tensor_tag);
+  ADD_ELEMENT(uint16_tensors_, uint16_tensor_tag);
+  ADD_ELEMENT(int16_tensors_, int16_tensor_tag);
+  ADD_ELEMENT(uint32_tensors_, uint32_tensor_tag);
+
+  ADD_ELEMENT(int32_tensors_, int32_tensor_tag);
+  ADD_ELEMENT(uint64_tensors_, uint64_tensor_tag);
+  ADD_ELEMENT(int64_tensors_, int64_tensor_tag);
+
+  ADD_ELEMENT(float_tensors_, float_tensor_tag);
+  ADD_ELEMENT(double_tensors_, double_tensor_tag);
+
+  ADD_SUBSEQUENCE(list_data, list_offsets_, list_builder, list_tag, "list");
+  ADD_SUBSEQUENCE(tuple_data, tuple_offsets_, tuple_builder, tuple_tag, "tuple");
+  ADD_SUBSEQUENCE(dict_data, dict_offsets_, dict_builder, dict_tag, "dict");
 
   TypePtr type = TypePtr(new DenseUnionType(types));
 

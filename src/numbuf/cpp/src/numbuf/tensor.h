@@ -51,7 +51,15 @@ private:
   std::shared_ptr<arrow::StructBuilder> tensors_;
 };
 
-
+typedef TensorBuilder<arrow::UInt8Type> UInt8TensorBuilder;
+typedef TensorBuilder<arrow::Int8Type> Int8TensorBuilder;
+typedef TensorBuilder<arrow::UInt16Type> UInt16TensorBuilder;
+typedef TensorBuilder<arrow::Int16Type> Int16TensorBuilder;
+typedef TensorBuilder<arrow::UInt32Type> UInt32TensorBuilder;
+typedef TensorBuilder<arrow::Int32Type> Int32TensorBuilder;
+typedef TensorBuilder<arrow::UInt64Type> UInt64TensorBuilder;
+typedef TensorBuilder<arrow::Int64Type> Int64TensorBuilder;
+typedef TensorBuilder<arrow::FloatType> FloatTensorBuilder;
 typedef TensorBuilder<arrow::DoubleType> DoubleTensorBuilder;
 
 }

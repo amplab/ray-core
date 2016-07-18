@@ -31,3 +31,6 @@
 # Documentation
 doc/doxygen
 doc/_build
+
+# numbuf build files
+src/numbuf/build

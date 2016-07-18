@@ -27,7 +27,6 @@ Status TensorBuilder<T>::Append(const std::vector<int64_t>& dims, const elem_typ
     size *= dim;
     RETURN_NOT_OK(dim_data_->Append(dim));
   }
-  std::cout << "appended with argument " << data << std::endl;
   RETURN_NOT_OK(value_data_->Append(data, size));
   return Status::OK(); // tensors_->Append();
 }
@@ -37,6 +36,15 @@ std::shared_ptr<Array> TensorBuilder<T>::Finish() {
   return tensors_->Finish();
 }
 
+template class TensorBuilder<UInt8Type>;
+template class TensorBuilder<Int8Type>;
+template class TensorBuilder<UInt16Type>;
+template class TensorBuilder<Int16Type>;
+template class TensorBuilder<UInt32Type>;
+template class TensorBuilder<Int32Type>;
+template class TensorBuilder<UInt64Type>;
+template class TensorBuilder<Int64Type>;
+template class TensorBuilder<FloatType>;
 template class TensorBuilder<DoubleType>;
 
 }

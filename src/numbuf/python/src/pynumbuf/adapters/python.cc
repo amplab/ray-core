@@ -1,43 +1,43 @@
 #include "python.h"
 
+#include <sstream>
+
+#include "scalars.h"
+
 using namespace arrow;
 
 namespace numbuf {
 
 PyObject* get_value(ArrayPtr arr, int32_t index, int32_t type) {
   PyObject* result;
-  switch (type) {
-    case BOOL_TAG:
+  switch (arr->type()->type) {
+    case Type::BOOL:
       return PyBool_FromLong(std::static_pointer_cast<BooleanArray>(arr)->Value(index));
-    case INT_TAG:
+    case Type::INT64:
       return PyInt_FromLong(std::static_pointer_cast<Int64Array>(arr)->Value(index));
-    case STRING_TAG: {
+    case Type::STRING: {
       int32_t nchars;
       const uint8_t* str = std::static_pointer_cast<StringArray>(arr)->GetValue(index, &nchars);
       return PyString_FromStringAndSize(reinterpret_cast<const char*>(str), nchars);
     }
-    case FLOAT_TAG:
+    case Type::FLOAT:
       return PyFloat_FromDouble(std::static_pointer_cast<FloatArray>(arr)->Value(index));
-    case DOUBLE_TAG:
+    case Type::DOUBLE:
       return PyFloat_FromDouble(std::static_pointer_cast<DoubleArray>(arr)->Value(index));
-    case LIST_TAG: {
-      auto list = std::static_pointer_cast<ListArray>(arr);
-      ARROW_CHECK_OK(DeserializeList(list->values(), list->value_offset(index), list->value_offset(index+1), &result));
+    case Type::STRUCT: {
+      auto s = std::static_pointer_cast<StructArray>(arr);
+      auto l = std::static_pointer_cast<ListArray>(s->field(0));
+      if (s->type()->child(0)->name == "list") {
+        ARROW_CHECK_OK(DeserializeList(l->values(), l->value_offset(index), l->value_offset(index+1), &result));
+      } else if (s->type()->child(0)->name == "tuple") {
+        ARROW_CHECK_OK(DeserializeTuple(l->values(), l->value_offset(index), l->value_offset(index+1), &result));
+      } else if (s->type()->child(0)->name == "dict") {
+        ARROW_CHECK_OK(DeserializeDict(l->values(), l->value_offset(index), l->value_offset(index+1), &result));
+      } else {
+        ARROW_CHECK_OK(DeserializeArray(arr, index, &result));
+      }
       return result;
     }
-    case TUPLE_TAG: {
-      auto list = std::static_pointer_cast<ListArray>(arr);
-      ARROW_CHECK_OK(DeserializeTuple(list->values(), list->value_offset(index), list->value_offset(index+1), &result));
-      return result;
-    }
-    case DICT_TAG: {
-      auto list = std::static_pointer_cast<ListArray>(arr);
-      ARROW_CHECK_OK(DeserializeDict(list->values(), list->value_offset(index), list->value_offset(index+1), &result));
-      return result;
-    }
-    case TENSOR_TAG:
-      ARROW_CHECK_OK(DeserializeArray(arr, index, &result));
-      return result;
     default:
       DCHECK(false) << "union tag not recognized " << type;
   }
@@ -53,10 +53,17 @@ Status append(PyObject* elem, SequenceBuilder& builder,
     RETURN_NOT_OK(builder.Append(elem == Py_True));
   } else if (PyFloat_Check(elem)) {
     RETURN_NOT_OK(builder.Append(PyFloat_AS_DOUBLE(elem)));
+  } else if (PyLong_Check(elem)) {
+    int overflow = 0;
+    int64_t data = PyLong_AsLongLongAndOverflow(elem, &overflow);
+    RETURN_NOT_OK(builder.Append(data));
+    if(overflow) {
+      return Status::NotImplemented("long overflow");
+    }
   } else if (PyInt_Check(elem)) {
     RETURN_NOT_OK(builder.Append(PyInt_AS_LONG(elem)));
   } else if (PyString_Check(elem)) {
-    RETURN_NOT_OK(builder.Append(PyString_AS_STRING(elem)));
+    RETURN_NOT_OK(builder.Append(PyString_AS_STRING(elem), PyString_GET_SIZE(elem)));
   } else if (PyList_Check(elem)) {
     builder.AppendList(PyList_Size(elem));
     sublists.push_back(elem);
@@ -66,33 +73,48 @@ Status append(PyObject* elem, SequenceBuilder& builder,
   } else if (PyTuple_Check(elem)) {
     builder.AppendTuple(PyTuple_Size(elem));
     subtuples.push_back(elem);
+  } else if (PyArray_IsScalar(elem, Generic)) {
+    RETURN_NOT_OK(AppendScalar(elem, builder));
   } else if (PyArray_Check(elem)) {
     RETURN_NOT_OK(SerializeArray((PyArrayObject*) elem, builder));
   } else if (elem == Py_None) {
     RETURN_NOT_OK(builder.Append());
   } else {
-    DCHECK(false) << "data type of " << PyString_AS_STRING(PyObject_Repr(elem))
-                  << " not recognized";
+    std::stringstream ss;
+    ss << "data type of " << PyString_AS_STRING(PyObject_Repr(elem))
+       << " not recognized";
+    return Status::NotImplemented(ss.str());
   }
   return Status::OK();
 }
 
-std::shared_ptr<Array> SerializeSequences(std::vector<PyObject*> sequences) {
+Status SerializeSequences(std::vector<PyObject*> sequences, std::shared_ptr<Array>* out) {
+  DCHECK(out);
   SequenceBuilder builder(nullptr);
   std::vector<PyObject*> sublists, subtuples, subdicts;
   for (const auto& sequence : sequences) {
     PyObject* item;
     PyObject* iterator = PyObject_GetIter(sequence);
     while (item = PyIter_Next(iterator)) {
-      ARROW_CHECK_OK(append(item, builder, sublists, subtuples, subdicts));
+      RETURN_NOT_OK(append(item, builder, sublists, subtuples, subdicts));
       Py_DECREF(item);
     }
     Py_DECREF(iterator);
   }
-  auto list = sublists.size() > 0 ? SerializeSequences(sublists) : nullptr;
-  auto tuple = subtuples.size() > 0 ? SerializeSequences(subtuples) : nullptr;
-  auto dict = subdicts.size() > 0 ? SerializeDict(subdicts) : nullptr;
-  return builder.Finish(list, tuple, dict);
+  std::shared_ptr<Array> list;
+  if (sublists.size() > 0) {
+    RETURN_NOT_OK(SerializeSequences(sublists, &list));
+  }
+  std::shared_ptr<Array> tuple;
+  if (subtuples.size() > 0) {
+    RETURN_NOT_OK(SerializeSequences(subtuples, &tuple));
+  }
+  std::shared_ptr<Array> dict;
+  if (subdicts.size() > 0) {
+    RETURN_NOT_OK(SerializeDict(subdicts, &dict));
+  }
+  *out = builder.Finish(list, tuple, dict);
+  return Status::OK();
 }
 
 #define DESERIALIZE_SEQUENCE(CREATE, SET_ITEM)                                \
@@ -123,22 +145,32 @@ Status DeserializeTuple(std::shared_ptr<Array> array, int32_t start_idx, int32_t
   DESERIALIZE_SEQUENCE(PyTuple_New, PyTuple_SetItem)
 }
 
-std::shared_ptr<Array> SerializeDict(std::vector<PyObject*> dicts) {
+Status SerializeDict(std::vector<PyObject*> dicts, std::shared_ptr<Array>* out) {
   DictBuilder result;
   std::vector<PyObject*> sublists, subtuples, subdicts, dummy;
   for (const auto& dict : dicts) {
     PyObject *key, *value;
     Py_ssize_t pos = 0;
     while (PyDict_Next(dict, &pos, &key, &value)) {
-      ARROW_CHECK_OK(append(key, result.keys(), dummy, dummy, dummy));
+      RETURN_NOT_OK(append(key, result.keys(), dummy, dummy, dummy));
       DCHECK(dummy.size() == 0);
-      ARROW_CHECK_OK(append(value, result.vals(), sublists, subtuples, subdicts));
+      RETURN_NOT_OK(append(value, result.vals(), sublists, subtuples, subdicts));
     }
   }
-  auto val_list = sublists.size() > 0 ? SerializeSequences(sublists) : nullptr;
-  auto val_tuples = subtuples.size() > 0 ? SerializeSequences(subtuples) : nullptr;
-  auto val_dict = subdicts.size() > 0 ? SerializeDict(subdicts) : nullptr;
-  return result.Finish(val_list, val_tuples, val_dict);
+  std::shared_ptr<Array> val_list;
+  if (sublists.size() > 0) {
+    RETURN_NOT_OK(SerializeSequences(sublists, &val_list));
+  }
+  std::shared_ptr<Array> val_tuples;
+  if (subtuples.size() > 0) {
+    RETURN_NOT_OK(SerializeSequences(subtuples, &val_tuples));
+  }
+  std::shared_ptr<Array> val_dict;
+  if (subdicts.size() > 0) {
+    RETURN_NOT_OK(SerializeDict(subdicts, &val_dict));
+  }
+  *out = result.Finish(val_list, val_tuples, val_dict);
+  return Status::OK();
 }
 
 Status DeserializeDict(std::shared_ptr<Array> array, int32_t start_idx, int32_t stop_idx, PyObject** out) {
