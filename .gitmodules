@@ -1,0 +1,6 @@
+[submodule "src/numbuf"]
+	path = src/numbuf
+	url = https://github.com/pcmoritz/numbuf
+[submodule "src/arrow"]
+	path = src/arrow
+	url = https://github.com/pcmoritz/arrow

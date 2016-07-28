@@ -1,0 +1,22 @@
+module plasma.service;
+
+struct ObjectInfo {
+  string name;
+  uint64 size;
+  int64 create_time;
+  int64 construct_duration;
+  int64 creator_id;
+};
+
+[ServiceName="plasma::service::Plasma"]
+interface Plasma {
+  CreateObject(string object_id, uint64 size, string name, int64 creator_id)
+    => (handle<shared_buffer> buffer);
+  ResizeObject(string object_id, uint64 new_size)
+    => (handle<shared_buffer> buffer);
+  SealObject(string object_id);
+  GetObject(string object_id, bool block)
+    => (handle<shared_buffer> buffer, uint64 size);
+  ListObjects()
+    => (array<ObjectInfo> info);
+};

@@ -1,0 +1,27 @@
+group("client") {
+  deps = [
+    ":plasma"
+  ]
+}
+
+shared_library("plasma") {
+  output_name = "plasma"
+
+  include_dirs = [ "/usr/include/python2.7" ] # TODO(pcm): make this general
+
+  deps = [
+    "//ray/client",
+    "//plasma/service:plasma"
+  ]
+
+  sources = [
+    "plasma.cc",
+  ]
+
+  if (!is_win) {
+    # This is required so functions in Python C extensions can be found
+    configs -= [ "//build/config/gcc:symbol_visibility_hidden" ]
+  }
+
+  ldflags = [ "-lpython2.7" ]
+}

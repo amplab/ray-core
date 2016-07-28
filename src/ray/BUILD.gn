@@ -1,0 +1,6 @@
+group("ray") {
+  deps = [
+    "//ray/app",
+    "//ray/client",
+  ]
+}
