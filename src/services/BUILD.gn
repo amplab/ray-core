@@ -51,14 +51,6 @@ group("services") {
       "//services/url_response_disk_cache",
     ]
   }
-
-  # TODO(jamesr): We only support building V8 snapshot data on a linux host
-  # since it needs a 32 bit toolchain and we don't have one configured for mac
-  # hosts.
-  # TODO(cstout): javascript/v8 build support for fnl/musl
-  if (!is_fnl && host_os == "linux") {
-    deps += [ "//services/js" ]
-  }
 }
 
 group("tests") {
@@ -84,13 +76,6 @@ group("tests") {
   if (is_android) {
     deps += [ "//services/contacts:apptests" ]
     deps += [ "//services/notifications:apptests" ]
-  }
-
-  # TODO(jamesr): We only support building V8 snapshot data on a linux host since it
-  # needs a 32 bit toolchain and we don't have one configured for mac hosts.
-  # TODO(cstout): javascript/v8 build support for fnl/musl
-  if (!is_fnl && host_os == "linux") {
-    deps += [ "//services/js:tests" ]
   }
 
   if (is_android || is_linux) {
