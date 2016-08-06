@@ -53,7 +53,11 @@ template("mojom") {
   cpp_sync_sources_target_name = "${target_name}_${cpp_sources_suffix}_sync"
   if (defined(invoker.sources)) {
     generator_root = rebase_path("mojo/public/tools/bindings", ".", mojo_root)
-    mojom_tool = "$generator_root/mojom_tool.py"
+    if (!standalone_build) {
+      mojom_tool = "$generator_root/mojom_tool.py"
+    } else {
+      mojom_tool = "$generator_root/mojom_tool_standalone.py"
+    }
     generator_sources = [
       mojom_tool,
       "$generator_root/run_code_generators.py",
