@@ -282,6 +282,7 @@ class ClientContext {
   ClientContext()
     : at_exit_(mojo::util::MakeUnique<base::AtExitManager>()) {}
   ~ClientContext() {
+    connection_thread_.detach();
     at_exit_.reset();
   }
   /*! Connect this client context to the Ray shell.
