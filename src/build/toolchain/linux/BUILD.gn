@@ -6,6 +6,10 @@ import("//build/config/sysroot.gni")
 import("//build/toolchain/clang.gni")
 import("//build/toolchain/gcc_toolchain.gni")
 
+declare_args() {
+  standalone_build = true
+}
+
 gcc_toolchain("arm") {
   cc = "arm-linux-gnueabi-gcc"
   cxx = "arm-linux-gnueabi-g++"
@@ -21,15 +25,20 @@ gcc_toolchain("arm") {
 }
 
 gcc_toolchain("clang_x86") {
-  if (use_clang_type_profiler) {
-    prefix = rebase_path("//third_party/llvm-allocated-type/Linux_ia32/bin",
-                         root_build_dir)
+  if (!standalone_build) {
+    if (use_clang_type_profiler) {
+      prefix = rebase_path("//third_party/llvm-allocated-type/Linux_ia32/bin",
+                           root_build_dir)
+    } else {
+      prefix = rebase_path("//third_party/llvm-build/Release+Asserts/bin",
+                           root_build_dir)
+    }
+    cc = "$prefix/clang"
+    cxx = "$prefix/clang++"
   } else {
-    prefix = rebase_path("//third_party/llvm-build/Release+Asserts/bin",
-                         root_build_dir)
+    cc = "clang-3.8"
+    cxx = "clang++-3.8"
   }
-  cc = "$prefix/clang"
-  cxx = "$prefix/clang++"
   readelf = "readelf"
   nm = "nm"
   ar = "ar"
@@ -55,15 +64,20 @@ gcc_toolchain("x86") {
 }
 
 gcc_toolchain("clang_x64") {
-  if (use_clang_type_profiler) {
-    prefix = rebase_path("//third_party/llvm-allocated-type/Linux_x64/bin",
-                         root_build_dir)
+  if (!standalone_build) {
+    if (use_clang_type_profiler) {
+      prefix = rebase_path("//third_party/llvm-allocated-type/Linux_ia32/bin",
+                           root_build_dir)
+    } else {
+      prefix = rebase_path("//third_party/llvm-build/Release+Asserts/bin",
+                           root_build_dir)
+    }
+    cc = "$prefix/clang"
+    cxx = "$prefix/clang++"
   } else {
-    prefix = rebase_path("//third_party/llvm-build/Release+Asserts/bin",
-                         root_build_dir)
+    cc = "clang-3.8"
+    cxx = "clang++-3.8"
   }
-  cc = "$prefix/clang"
-  cxx = "$prefix/clang++"
 
   readelf = "readelf"
   nm = "nm"

@@ -388,7 +388,8 @@ if (is_fnl) {
 
 if (is_clang) {
   _native_compiler_configs += [
-    "//build/config/clang:find_bad_constructs",
+    # deactivate this so mojo can be built with an off-the-shelf clang
+    # "//build/config/clang:find_bad_constructs",
     "//build/config/clang:extra_warnings",
   ]
 }

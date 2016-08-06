@@ -435,6 +435,7 @@ config("compiler") {
   # ------------------------------------
   if (is_clang) {
     cflags += [ "-fcolor-diagnostics" ]
+    cflags += [ "-Igen" ]
   }
 
   # C++11 compiler flags setup.
