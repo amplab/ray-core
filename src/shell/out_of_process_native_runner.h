@@ -42,6 +42,8 @@ class OutOfProcessNativeRunner : public NativeRunner {
 
   scoped_ptr<ChildProcessHost> child_process_host_;
 
+  bool connect_to_running_process_;
+
   DISALLOW_COPY_AND_ASSIGN(OutOfProcessNativeRunner);
 };
 

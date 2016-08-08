@@ -16,6 +16,8 @@ group("default") {
     "//examples",
     "//mojo",
     "//mojom",
+    "//ray",
+    "//plasma",
     "//services",
     "//shell",
   ]

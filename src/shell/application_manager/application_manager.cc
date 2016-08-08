@@ -400,7 +400,14 @@ void ApplicationManager::RunNativeApplication(
 
   DCHECK(application_request.is_pending());
 
-  if (!path_exists) {
+  // TODO(pcm): We should eventually get rid of all modifications of //shell
+  // and use the mechanisms provided there (like ApplicationManager) to
+  // register custom handlers for ray client connections. Also, the line below
+  // is repeated in out_of_process_native_runner.cc. Let's do these things the
+  // next time we upgrade mojo.
+  bool connect_to_running_process =
+    path.BaseName().AsUTF8Unsafe().compare(0, 7, "worker{") == 0;
+  if (!connect_to_running_process && !path_exists) {
     LOG(ERROR) << "Library not started because library path '" << path.value()
                << "' does not exist.";
     return;

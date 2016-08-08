@@ -51,7 +51,7 @@ OutOfProcessNativeRunner::OutOfProcessNativeRunner(
     : context_(context), options_(options) {}
 
 OutOfProcessNativeRunner::~OutOfProcessNativeRunner() {
-  if (child_process_host_) {
+  if (child_process_host_ && !connect_to_running_process_) {
     // TODO(vtl): Race condition: If |ChildProcessHost::DidStart()| hasn't been
     // called yet, we shouldn't call |Join()| here. (Until |DidStart()|, we may
     // not have a child process to wait on.) Probably we should fix |Join()|.
@@ -71,9 +71,12 @@ void OutOfProcessNativeRunner::Start(
   child_process_host_.reset(new ChildProcessHost(context_));
 
   NativeApplicationOptions options = options_;
-  if (Require32Bit(app_path))
+  if (false && Require32Bit(app_path))
     options.require_32_bit = true;
-  child_process_host_->Start(options);
+  // TODO(pcm): The line below is repeated in application_manager.cc
+  connect_to_running_process_ =
+    app_path.BaseName().AsUTF8Unsafe().compare(0, 7, "worker{") == 0;
+  child_process_host_->Start(options, connect_to_running_process_);
 
   // TODO(vtl): |app_path.AsUTF8Unsafe()| is unsafe.
   child_process_host_->StartApp(
@@ -85,7 +88,7 @@ void OutOfProcessNativeRunner::Start(
 void OutOfProcessNativeRunner::AppCompleted(int32_t result) {
   DVLOG(2) << "OutOfProcessNativeRunner::AppCompleted(" << result << ")";
 
-  if (child_process_host_) {
+  if (child_process_host_ && !connect_to_running_process_) {
     child_process_host_->Join();
     child_process_host_.reset();
   }

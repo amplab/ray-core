@@ -27,3 +27,7 @@
 *.exe
 *.out
 *.app
+
+# Documentation
+doc/doxygen
+doc/_build
